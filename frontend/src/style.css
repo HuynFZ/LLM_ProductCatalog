@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+  
+  body {
+    margin: 0;
+    font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background-color: #09090b;
+    color: #09090b;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* Custom Pink & Black scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #f472b6;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #ec4899;
+}
+
+/* Pulse glow animation for AI pink badge */
+@keyframes pink-pulse {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(236, 72, 153, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(236, 72, 153, 0.75);
+  }
+}
+
+.animate-pink-glow {
+  animation: pink-pulse 2s infinite ease-in-out;
+}
