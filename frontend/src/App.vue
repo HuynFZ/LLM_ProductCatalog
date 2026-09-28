@@ -19,14 +19,14 @@ const isLoadingProducts = ref(false)
 
 // AI Models State
 const models = ref([...availableModels])
-const selectedModelId = ref('que2search-vector')
+const selectedModelId = ref('auto-cot')
 
 // Chat Interface State
 const isGenerating = ref(false)
 const messages = ref([
   {
     sender: 'ai',
-    text: "Xin chào! Tôi là **Trợ Lý Mua Sắm AI (Que2Search + Qdrant)**. Bạn muốn tìm kiếm sản phẩm gì hôm nay? Tôi sẽ phân tích ngữ nghĩa và tìm kiếm vector để đề xuất những sản phẩm phù hợp nhất cho bạn!",
+    text: "Xin chào! Tôi là **Trợ Lý Mua Sắm AI**. Bạn đang tìm kiếm sản phẩm hoặc phong cách thời trang nào hôm nay? Hãy nhập nhu cầu hoặc sở thích của bạn để tôi gợi ý những sản phẩm phù hợp nhất nhé!",
     timestamp: '10:00'
   }
 ])
@@ -57,9 +57,26 @@ const removeToast = (id) => {
 
 // Hàm chuẩn hóa dữ liệu nhận từ Web API / CSDL MySQL
 const normalizeProduct = (p, index) => {
-  const originalPrice = Number(p.original_price ?? p.originalPrice ?? 0)
+  const originalPrice = Number(p.original_price ?? p.originalPrice ?? 29.99)
   const discountPercent = Number(p.discount_percent ?? p.discountPercent ?? 0)
-  const finalPrice = p.final_price ?? p.finalPrice ?? (originalPrice * (1 - discountPercent / 100))
+  const finalPrice = p.final_price ?? p.finalPrice ?? (discountPercent > 0 ? (originalPrice * (1 - discountPercent / 100)) : originalPrice)
+
+  const productType = p.product_type || p.category || "Thời trang"
+  const productGroup = p.product_group || p.productGroup || "Thời trang H&M"
+  const department = p.department || p.brand || "H&M Collection"
+  const genderGroup = p.gender_group || p.genderGroup || "H&M Collection"
+  const pattern = p.pattern || "Solid"
+  const detailDesc = p.detail_desc || p.description || `Sản phẩm ${p.name || ''} chính hãng H&M.`
+  const color = p.color || "Tiêu chuẩn"
+  const size = p.size || "M"
+  const stockQuantity = p.stock_quantity !== undefined ? Number(p.stock_quantity) : 25
+  const variantId = p.variant_id || `${p.id || index}-${color}-${size}`
+  const articleId = p.article_id || p.articleId || String(p.id)
+  
+  const availableColors = p.available_colors && p.available_colors.length > 0 ? p.available_colors : [color]
+  const availableSizes = p.available_sizes && p.available_sizes.length > 0 ? p.available_sizes : [size]
+  const colorImages = p.color_images || p.colorImages || {}
+  const colorDetails = p.color_details || p.colorDetails || {}
 
   const placeholderImages = [
     "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&auto=format&fit=crop&q=80",
@@ -71,28 +88,50 @@ const normalizeProduct = (p, index) => {
   ]
 
   return {
-    id: p.id,
+    id: String(p.id),
     name: p.name || `Sản phẩm #${p.id}`,
-    brand: p.brand || "Chính hãng",
-    category: p.category || "Tổng hợp",
-    description: p.description || `Sản phẩm ${p.name || ''} chính hãng chất lượng cao.`,
+    brand: department,
+    category: productType,
+    productType: productType,
+    productGroup: productGroup,
+    department: department,
+    genderGroup: genderGroup,
+    pattern: pattern,
+    detailDesc: detailDesc,
+    description: detailDesc,
+    color: color,
+    size: size,
+    stockQuantity: stockQuantity,
+    variantId: variantId,
+    articleId: String(articleId),
+    availableColors: availableColors,
+    availableSizes: availableSizes,
+    colorImages: colorImages,
+    colorDetails: colorDetails,
     originalPrice: originalPrice,
     discountPercent: discountPercent,
     finalPrice: finalPrice,
     rating: p.rating ? Number(p.rating) : 4.8,
     reviewsCount: p.reviews_count ? Number(p.reviews_count) : 89,
-    image: p.image || p.image_url || placeholderImages[index % placeholderImages.length],
-    inStock: p.in_stock !== undefined ? Boolean(p.in_stock) : true,
-    tags: p.tags || ["Chính hãng", "Mới"],
-    specs: p.specs || {
-      "Tình trạng": "Mới 100% nguyên seal",
-      "Bảo hành": "Chính hãng",
-      "Giao hàng": "Toàn quốc"
+    image: p.image || p.image_url || (colorImages[color] || placeholderImages[index % placeholderImages.length]),
+    inStock: stockQuantity > 0,
+    tags: [department, productType, color, `Size ${size}`],
+    specs: {
+      "Mã SP (Product ID)": String(p.id),
+      "Mã SKU màu (Article ID)": String(articleId),
+      "Loại sản phẩm (Product Type)": productType,
+      "Nhóm ngành hàng (Group)": productGroup,
+      "Phân khúc (Gender)": genderGroup,
+      "Phong cách (Department)": department,
+      "Họa tiết (Pattern)": pattern,
+      "Màu sắc ban đầu": color,
+      "Kích cỡ": size,
+      "Tồn kho CSDL": `${stockQuantity} sản phẩm`
     }
   }
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
 
 // Gọi API lấy dữ liệu sản phẩm thật từ Backend ngay khi mở trang
 const fetchProductsFromDatabase = async () => {
@@ -122,14 +161,21 @@ const fetchModelsFromApi = async () => {
   try {
     const response = await axios.get(`${API_BASE_URL}/api/models`, { timeout: 5000 })
     if (Array.isArray(response.data) && response.data.length > 0) {
-      models.value = response.data
-      // Nếu model hiện tại không nằm trong danh sách API trả về, chọn model đầu tiên
-      if (!models.value.some(m => m.id === selectedModelId.value)) {
-        selectedModelId.value = models.value[0].id
-      }
+      // Hợp nhất dữ liệu API với availableModels để luôn đảm bảo có cả 2 mô hình
+      const merged = [...availableModels]
+      response.data.forEach(apiModel => {
+        const idx = merged.findIndex(m => m.id === apiModel.id)
+        if (idx >= 0) {
+          merged[idx] = { ...merged[idx], ...apiModel }
+        } else {
+          merged.push(apiModel)
+        }
+      })
+      models.value = merged
     }
   } catch (e) {
     console.warn("Dùng danh sách models mặc định:", e.message)
+    models.value = [...availableModels]
   }
 }
 
@@ -171,19 +217,14 @@ const handleSendMessage = async (queryText) => {
       const matchedIds = result.productsData.map(p => p.id)
       highlightedProductIds.value = matchedIds
 
-      // Merge các sản phẩm từ Vector Search vào danh sách hiển thị
-      const existingIds = new Set(products.value.map(p => p.id))
-      const newProducts = result.productsData.filter(p => !existingIds.has(p.id))
+      // Đưa toàn bộ sản phẩm do AI gợi ý lên đầu danh sách theo đúng thứ tự điểm tương quan
+      const matchedMap = new Map(result.productsData.map(p => [String(p.id), p]))
+      const nonMatched = products.value.filter(p => !matchedMap.has(String(p.id)))
       
-      const updatedExisting = products.value.map(p => {
-        const matched = result.productsData.find(mp => mp.id === p.id)
-        return matched ? { ...p, matchScore: matched.matchScore } : p
-      })
-
-      // Đặt các sản phẩm AI tìm thấy lên đầu danh sách
-      products.value = [...newProducts, ...updatedExisting]
+      // Hợp nhất: Toàn bộ danh sách do AI tìm thấy (theo đúng thứ tự điểm tương quan) đặt ở đầu
+      products.value = [...result.productsData, ...nonMatched]
       isDatabaseConnected.value = true
-      addToast(`🎯 AI Vector Search đã tìm thấy ${result.productsData.length} sản phẩm phù hợp!`, 'success')
+      addToast(`🎯 AI Auto-CoT đã tìm thấy ${result.productsData.length} sản phẩm phù hợp & liên quan!`, 'success')
     } else if (result.matchedProductIds && result.matchedProductIds.length > 0) {
       highlightedProductIds.value = result.matchedProductIds
       addToast(`Đã tìm thấy ${result.matchedProductIds.length} sản phẩm phù hợp!`, 'info')

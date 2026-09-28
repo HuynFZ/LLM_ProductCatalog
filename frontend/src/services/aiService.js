@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { availableModels } from '../data/products';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 const placeholderImages = [
   "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&auto=format&fit=crop&q=80",
@@ -12,141 +12,150 @@ const placeholderImages = [
   "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?w=600&auto=format&fit=crop&q=80"
 ];
 
-// Hàm chuẩn hóa một sản phẩm từ Backend Qdrant/MySQL
+const formatCurrency = (val) => {
+  const num = Number(val || 0);
+  if (num > 0 && num < 1000) return `$${num.toFixed(2)}`;
+  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num);
+};
+
+// Hàm chuẩn hóa một sản phẩm từ Backend CSDL MySQL & Auto-CoT
 export function normalizeProductData(p, index = 0) {
-  const originalPrice = Number(p.original_price ?? p.originalPrice ?? p.price ?? 0);
+  const originalPrice = Number(p.original_price ?? p.originalPrice ?? p.price ?? 29.99);
   const discountPercent = Number(p.discount_percent ?? p.discountPercent ?? 0);
   const finalPrice = p.final_price ?? p.finalPrice ?? (discountPercent > 0 ? (originalPrice * (1 - discountPercent / 100)) : originalPrice);
 
+  const productType = p.product_type || p.category || "Thời trang";
+  const department = p.department || p.brand || "H&M Collection";
+  const genderGroup = p.gender_group || "";
+  const detailDesc = p.detail_desc || p.description || `${p.name || 'Sản phẩm'} thời trang chính hãng H&M.`;
+  const color = p.color || "Tiêu chuẩn";
+  const size = p.size || "M";
+  const stockQuantity = p.stock_quantity !== undefined ? Number(p.stock_quantity) : 25;
+  const variantId = p.variant_id || `${p.id || index}-${color}-${size}`;
+  const availableColors = p.available_colors && p.available_colors.length > 0 ? p.available_colors : [color];
+  const availableSizes = p.available_sizes && p.available_sizes.length > 0 ? p.available_sizes : [size];
+
   return {
-    id: String(p.id ?? p.parent_asin ?? `SP_${index}`),
+    id: String(p.id ?? `SP_${index}`),
     name: p.name || p.title || `Sản phẩm #${p.id || index + 1}`,
-    brand: p.brand || "Chính hãng",
-    category: p.category || p.main_category || "Điện tử & Phụ kiện",
-    description: p.description || `${p.name || p.title || 'Sản phẩm'} chính hãng với công nghệ hiện đại và chất lượng cao cấp.`,
+    brand: department,
+    category: productType,
+    productType: productType,
+    department: department,
+    genderGroup: genderGroup,
+    detailDesc: detailDesc,
+    description: detailDesc,
+    color: color,
+    size: size,
+    stockQuantity: stockQuantity,
+    variantId: variantId,
+    availableColors: availableColors,
+    availableSizes: availableSizes,
     originalPrice: originalPrice,
     discountPercent: discountPercent,
     finalPrice: finalPrice,
-    rating: p.rating ? Number(p.rating) : (p.average_rating ? Number(p.average_rating) : 4.8),
-    reviewsCount: p.reviews_count ? Number(p.reviews_count) : (p.rating_number ? Number(p.rating_number) : 95),
+    rating: p.rating ? Number(p.rating) : 4.8,
+    reviewsCount: p.reviews_count ? Number(p.reviews_count) : 95,
     image: p.image || p.image_url || placeholderImages[index % placeholderImages.length],
+    colorImages: p.color_images || {},
     matchScore: p.match_score !== undefined ? Number(p.match_score) : null,
-    inStock: p.in_stock !== undefined ? Boolean(p.in_stock) : true,
-    tags: p.tags || ["Vector Search", "Gợi ý AI"],
-    specs: p.specs || {
-      "Tình trạng": "Mới 100% nguyên seal",
-      "Bảo hành": "12 tháng chính hãng",
-      "Giao hàng": "Toàn quốc 2-3 ngày"
+    matchReason: p.match_reason || '',
+    inStock: stockQuantity > 0,
+    tags: [department, productType, color, `Size ${size}`, ...(genderGroup ? [genderGroup] : [])],
+    specs: {
+      "Mã SP (ID)": String(p.id ?? `SP_${index}`),
+      "Loại sản phẩm": productType,
+      "Bộ phận": department,
+      "Đối tượng": genderGroup || "H&M Collection",
+      "Màu sắc": color,
+      "Kích cỡ": size,
+      "Tồn kho": `${stockQuantity} sản phẩm`,
+      "Mã biến thể": variantId
     }
   };
 }
 
-export async function sendChatMessage(query, selectedModelId = 'que2search-vector', allProducts = [], isAiChat = true) {
+export async function sendChatMessage(query, selectedModelId = 'auto-cot', allProducts = [], isAiChat = true) {
   const normalizedQuery = query.toLowerCase().trim();
   const currentModel = availableModels.find(m => m.id === selectedModelId) || availableModels[0];
 
-  // 1. Ưu tiên gọi API sang Backend FastAPI (Vector Search qua Qdrant + Que2Search)
+  // 1. Ưu tiên gọi API sang Backend FastAPI (Auto-CoT Hybrid Search)
   let backendResult = null;
   try {
     const response = await axios.post(`${API_BASE_URL}/api/chat`, {
       query: query,
+      model_id: selectedModelId,
       model: selectedModelId,
       limit: isAiChat ? 5 : 200,
       is_ai_chat: isAiChat
-    }, { timeout: 15000 });
+    }, { timeout: 60000 });
     
-    if (response?.data?.ai_response) {
+    if (response?.data && (response.data.ai_response !== undefined || response.data.products_data !== undefined)) {
       backendResult = response.data;
     }
   } catch (e) {
     console.warn("Backend API Chat error / fallback to local:", e?.message || e);
   }
 
-  // 2. Nếu Backend trả về kết quả thành công từ Qdrant Vector Search
-  if (backendResult?.products_data && backendResult.products_data.length > 0) {
-    const normalizedAiProducts = backendResult.products_data.map((p, idx) => normalizeProductData(p, idx));
-    const modelTag = `*[Xử lý bởi ${currentModel.name}]*\n\n`;
+  // 2. Nếu Backend phản hồi thành công (kể cả khi products_data rỗng vẫn dùng dữ liệu thật từ Backend)
+  if (backendResult) {
+    const rawProducts = backendResult.products_data || [];
+    const normalizedAiProducts = rawProducts.map((p, idx) => normalizeProductData(p, idx));
+    const modelTag = `*[Xử lý bởi ${currentModel.name || 'Auto-CoT Hybrid Search'}]*\n\n`;
+    
+    // Đọc chính xác trường `sql_query` từ FastAPI Backend trả về
+    const sqlQuery = backendResult.sql_query || backendResult.sql_generated || null;
 
     return {
       userQuery: query,
-      aiResponse: `${modelTag}${backendResult.ai_response}`,
+      aiResponse: backendResult.ai_response ? `${modelTag}${backendResult.ai_response}` : `${modelTag}Đã xử lý tìm kiếm thành công.`,
       matchedProductIds: backendResult.matched_product_ids || normalizedAiProducts.map(p => p.id),
       productsData: normalizedAiProducts,
-      searchMethod: backendResult.search_method || "Semantic Vector Search (Que2Search + Qdrant)",
-      sqlGenerated: backendResult.sql_generated || null,
+      searchMethod: backendResult.search_method || "Auto-CoT Hybrid Search",
+      sqlGenerated: sqlQuery,
       modelUsed: currentModel,
       timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
     };
   }
 
-  // 3. Fallback: Nếu Backend không có kết quả hoặc offline, phân tích từ khóa trực tiếp
+  // 3. Fallback: Nếu Backend offline hoặc mất kết nối, chỉ tìm kiếm từ khóa thực sự có ý nghĩa
   let matchedProducts = [];
-  let responseText = '';
-  const formatVND = (v) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v);
-  const keywords = normalizedQuery.split(/\s+/).filter(w => w.length > 1);
+  const STOP_WORDS = new Set(["tìm", "mua", "cần", "muốn", "cho", "tôi", "màu", "size", "giá", "dưới", "chiếc", "cái", "sp", "với", "và", "của", "ở", "là", "bộ", "loại"]);
+  const meaningfulKeywords = normalizedQuery.split(/\s+/).filter(w => w.length > 1 && !STOP_WORDS.has(w));
   
-  if (allProducts.length > 0) {
-    let maxPrice = null;
-    const millionMatch = normalizedQuery.match(/(?:dưới|tầm|nhỏ hơn|<|dưới mức)\s*(\d+(?:[.,]\d+)?)\s*(?:triệu|tr|m)/i);
-    if (millionMatch) {
-      maxPrice = parseFloat(millionMatch[1].replace(',', '.')) * 1000000;
-    } else {
-      const rawNumberMatch = normalizedQuery.match(/(?:dưới|nhỏ hơn|<)\s*(\d{6,9})/i);
-      if (rawNumberMatch) {
-        maxPrice = parseInt(rawNumberMatch[1], 10);
-      }
-    }
-
+  if (allProducts.length > 0 && meaningfulKeywords.length > 0) {
     matchedProducts = allProducts.filter(p => {
       const text = `${p.name || ''} ${p.brand || ''} ${p.category || ''} ${p.description || ''} ${(p.tags || []).join(' ')}`.toLowerCase();
-      return keywords.some(kw => text.includes(kw));
+      // Bắt buộc phải khớp ít nhất một từ khóa chính
+      return meaningfulKeywords.some(kw => text.includes(kw));
     });
-
-    if (/giảm giá|khuyến mãi|sale|ưu đãi|rẻ|rẻ nhất|tiết kiệm/i.test(normalizedQuery)) {
-      const discounted = allProducts.filter(p => Number(p.discountPercent || p.discount_percent || 0) > 0);
-      if (discounted.length > 0) {
-        matchedProducts = discounted;
-      }
-    }
-
-    if (maxPrice !== null && matchedProducts.length > 0) {
-      const priceFiltered = matchedProducts.filter(p => (p.finalPrice || p.originalPrice || 0) <= maxPrice);
-      if (priceFiltered.length > 0) {
-        matchedProducts = priceFiltered;
-      }
-    }
-
-    if (matchedProducts.length === 0) {
-      matchedProducts = allProducts.slice(0, 3);
-    }
   }
 
-  const modelTag = `*[Xử lý bởi ${currentModel.name}]*\n\n`;
+  const modelTag = `*[Xử lý bởi ${currentModel.name || 'Auto-CoT Hybrid Search'}]*\n\n`;
 
-  if (backendResult?.ai_response) {
-    responseText = `${modelTag}${backendResult.ai_response}`;
-  } else if (allProducts.length === 0) {
-    responseText = `${modelTag}Hiện tại chưa có dữ liệu sản phẩm nào từ API Web. Hãy khởi chạy Backend FastAPI và kết nối CSDL để tìm kiếm sản phẩm nhé!`;
-  } else if (matchedProducts.length === 0) {
-    responseText = `${modelTag}Tôi chưa tìm thấy sản phẩm nào khớp với yêu cầu *"${query}"* trong danh mục hiện tại.`;
-  } else {
-    const topItem = matchedProducts[0];
-    const itemPrice = topItem.finalPrice || topItem.originalPrice || 0;
-    const itemDiscount = topItem.discountPercent || topItem.discount_percent || 0;
-
-    responseText = `${modelTag}Tôi đã tìm thấy **${matchedProducts.length} sản phẩm** phù hợp với yêu cầu của bạn!\n\n🌟 Gợi ý hàng đầu: **${topItem.name}** với giá ưu đãi **${formatVND(itemPrice)}** ${itemDiscount > 0 ? `(Giảm ${itemDiscount}%)` : ''}.`;
+  if (matchedProducts.length === 0) {
+    return {
+      userQuery: query,
+      aiResponse: `${modelTag}Rất tiếc, hệ thống không tìm thấy sản phẩm nào phù hợp với yêu cầu *"${query}"*. Bạn vui lòng thử lại với từ khóa khác nhé!`,
+      matchedProductIds: [],
+      productsData: [],
+      searchMethod: "Text Keyword Search (0 kết quả)",
+      sqlGenerated: null,
+      modelUsed: currentModel,
+      timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+    };
   }
 
-  const sqlGenerated = backendResult?.sql_generated || 
-    `SELECT id, name, original_price, discount_percent FROM products WHERE name LIKE '%${query}%' LIMIT 10;`;
+  const topItem = matchedProducts[0];
+  const itemPrice = topItem.finalPrice || topItem.originalPrice || 0;
 
   return {
     userQuery: query,
-    aiResponse: responseText,
+    aiResponse: `${modelTag}Đã tìm thấy **${matchedProducts.length} sản phẩm** liên quan đến từ khóa của bạn.\n\n🌟 Gợi ý nổi bật: **${topItem.name}** (${formatCurrency(itemPrice)}).`,
     matchedProductIds: matchedProducts.map(p => p.id),
     productsData: matchedProducts,
     searchMethod: "Text Keyword Search (Fallback)",
-    sqlGenerated: sqlGenerated,
+    sqlGenerated: `SELECT * FROM products WHERE name LIKE '%${meaningfulKeywords[0] || query}%' LIMIT 10;`,
     modelUsed: currentModel,
     timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
   };
@@ -157,8 +166,8 @@ export async function searchCatalogVector(query) {
   try {
     const response = await axios.post(`${API_BASE_URL}/api/chat`, {
       query: query,
-      model: 'que2search-vector',
-      limit: 200,
+      model: 'auto-cot',
+      limit: 1000,
       is_ai_chat: false
     }, { timeout: 15000 });
     
@@ -167,7 +176,7 @@ export async function searchCatalogVector(query) {
     }
     return [];
   } catch (e) {
-    console.warn("Lỗi tìm kiếm vector danh mục:", e?.message || e);
+    console.warn("Lỗi tìm kiếm danh mục:", e?.message || e);
     return [];
   }
 }

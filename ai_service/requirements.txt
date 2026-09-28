@@ -1,6 +1,0 @@
-fastapi
-pydantic
-uvicorn
-torch --index-url https://download.pytorch.org/whl/cpu
-transformers
-mmh3

@@ -6,11 +6,11 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "8080:8080"
     environment:
       - DATABASE_URL=mysql+pymysql://root:rootpassword@db:3306/ecommerce_db
-      - QDRANT_URL=http://qdrant:6333  # Bổ sung dòng này để Backend biết đường gọi Qdrant
-      - AI_API_URL=http://ai-api:8001/api/v1/embed-query
+      - QDRANT_URL=http://qdrant:6333  # Giữ lại Qdrant cho nhu cầu lọc mềm trong tương lai
+      - OLLAMA_URL=http://host.docker.internal:11434/api/generate
     volumes:
       - ./backend:/app
     depends_on:
@@ -20,7 +20,7 @@ services:
   db:
     image: mysql:8.0
     ports:
-      - "3306:3306"
+      - "3307:3306"
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
       MYSQL_DATABASE: ecommerce_db
@@ -28,13 +28,6 @@ services:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       timeout: 20s
       retries: 10
-
-  ai-api:
-    build: ./ai_service
-    ports:
-      - "8001:8001"
-    volumes:
-      - ./ai_service:/app
 
   qdrant:
     image: qdrant/qdrant:latest

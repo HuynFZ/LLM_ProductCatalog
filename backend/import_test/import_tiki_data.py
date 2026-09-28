@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL", 
-    "mysql+pymysql://root:rootpassword@localhost:3306/ecommerce_db"
+    "mysql+pymysql://root:rootpassword@localhost:3307/ecommerce_db"
 )
 
 def import_tiki_data():
@@ -44,29 +44,38 @@ def import_tiki_data():
             cat_name = item["category"]
             print(f"⏳ Đang tải từ khóa: {keyword}...")
             
-            # Gọi thẳng vào API Frontend của Tiki
-            url = f"https://tiki.vn/api/v2/products?limit=50&q={keyword}"
-            response = requests.get(url, headers=headers)
-            
-            if response.status_code == 200:
-                data = response.json().get("data", [])
+            cat_imported = 0
+            for page in range(1, 6): # 5 trang x 50 = 250 sản phẩm / danh mục
+                if cat_imported >= 250:
+                    break
+                url = f"https://tiki.vn/api/v2/products?limit=50&page={page}&q={keyword}"
+                response = requests.get(url, headers=headers)
                 
-                for product in data:
-                    product_data = {
-                        # Đổi tiền tố thành TIKI_ để không trùng với hàng Amazon
-                        "parent_asin": f"TIKI_{product.get('id')}",
-                        "title": product.get("name", "Sản phẩm không tên"),
-                        "price": float(product.get("price", 0)),
-                        "average_rating": float(product.get("rating_average", 0)),
-                        "rating_number": int(product.get("review_count", 0)),
-                        "main_category": cat_name,
-                        "image_url": product.get("thumbnail_url", "https://via.placeholder.com/150"),
-                        "discount_percent": int(product.get("discount_rate", 0))
-                    }
-                    session.execute(insert_sql, product_data)
-                    total_imported += 1
-            else:
-                print(f"⚠️ Bị từ chối khi tải '{keyword}' (Mã lỗi: {response.status_code})")
+                if response.status_code == 200:
+                    data = response.json().get("data", [])
+                    if not data:
+                        break
+                    
+                    for product in data:
+                        if cat_imported >= 250:
+                            break
+                        product_data = {
+                            # Đổi tiền tố thành TIKI_ để không trùng với hàng Amazon
+                            "parent_asin": f"TIKI_{product.get('id')}",
+                            "title": product.get("name", "Sản phẩm không tên"),
+                            "price": float(product.get("price", 0)),
+                            "average_rating": float(product.get("rating_average", 0)),
+                            "rating_number": int(product.get("review_count", 0)),
+                            "main_category": cat_name,
+                            "image_url": product.get("thumbnail_url", "https://via.placeholder.com/150"),
+                            "discount_percent": int(product.get("discount_rate", 0))
+                        }
+                        session.execute(insert_sql, product_data)
+                        cat_imported += 1
+                        total_imported += 1
+                else:
+                    print(f"⚠️ Bị từ chối khi tải '{keyword}' trang {page} (Mã lỗi: {response.status_code})")
+                    break
 
         session.commit()
         print(f"✅ Đã nạp thành công {total_imported} sản phẩm thật từ Tiki vào MySQL!")

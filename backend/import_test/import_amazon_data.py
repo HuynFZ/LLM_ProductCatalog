@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL", 
-    "mysql+pymysql://root:rootpassword@localhost:3306/ecommerce_db"
+    "mysql+pymysql://root:rootpassword@localhost:3307/ecommerce_db"
 )
 
 def import_amazon_dataset():
@@ -72,7 +72,7 @@ def import_amazon_dataset():
             
             cat_count = 0
             for item in dataset:
-                if cat_count >= 50: # Lấy đúng 50 sản phẩm chất lượng mỗi loại
+                if cat_count >= 200: # Lấy 200 sản phẩm mỗi loại x 5 danh mục = 1000 sản phẩm
                     break
                     
                 try:

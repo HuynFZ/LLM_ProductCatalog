@@ -1,12 +1,13 @@
 export const availableModels = [
   {
-    id: "que2search-vector",
-    name: "Que2Search + Qdrant",
-    provider: "Local Embedding & Vector DB",
-    badge: "Vector Search ⚡",
-    description: "Nhúng vector ngữ nghĩa 256 chiều và tìm kiếm khoảng cách Cosine trên Qdrant",
+    id: "auto-cot",
+    name: "Auto-CoT Hybrid Search",
+    provider: "Ollama (Qwen 2.5) & MySQL",
+    badge: "Auto-CoT 🌟",
+    description: "Phân tích ý định qua suy luận CoT BFS & trích xuất thuộc tính JSON",
     color: "from-pink-500 to-rose-600",
-    status: "connected"
+    status: "connected",
+    type: "llm"
   }
 ];
 

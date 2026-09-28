@@ -1,6 +1,7 @@
 <script setup>
-import { ref, onMounted, nextTick, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import BrandLogo from './BrandLogo.vue'
+import { availableModels } from '../data/products'
 import { 
   Bot, 
   Send, 
@@ -11,10 +12,12 @@ import {
   RotateCcw, 
   Code2,
   ChevronUp,
+  ChevronDown,
   Cpu,
   ShoppingCart,
   Eye,
-  ArrowRight
+  ArrowRight,
+  Check
 } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -32,7 +35,7 @@ const props = defineProps({
   },
   models: {
     type: Array,
-    required: true
+    default: () => []
   },
   selectedModelId: {
     type: String,
@@ -53,9 +56,37 @@ const inputQuery = ref('')
 const messagesContainer = ref(null)
 const isListening = ref(false)
 const showSql = ref({})
+const isDropdownOpen = ref(false)
+const dropdownRef = ref(null)
+
+const displayModels = computed(() => {
+  if (props.models && props.models.length >= 2) {
+    return props.models
+  }
+  const base = [...availableModels]
+  if (props.models && props.models.length > 0) {
+    props.models.forEach(pm => {
+      const idx = base.findIndex(b => b.id === pm.id)
+      if (idx >= 0) base[idx] = { ...base[idx], ...pm }
+      else base.push(pm)
+    })
+  }
+  return base
+})
 
 const activeModel = () => {
-  return props.models.find(m => m.id === props.selectedModelId) || props.models[0] || { name: 'Que2Search + Qdrant', badge: 'Vector Search ⚡' }
+  return displayModels.value.find(m => m.id === props.selectedModelId) || displayModels.value[0] || { name: 'Auto-CoT Hybrid Search', badge: 'Auto-CoT 🌟' }
+}
+
+const selectModel = (modelId) => {
+  emit('update:selectedModelId', modelId)
+  isDropdownOpen.value = false
+}
+
+const handleClickOutside = (e) => {
+  if (dropdownRef.value && !dropdownRef.value.contains(e.target)) {
+    isDropdownOpen.value = false
+  }
 }
 
 const scrollToBottom = async () => {
@@ -75,6 +106,11 @@ watch(() => props.isGenerating, () => {
 
 onMounted(() => {
   scrollToBottom()
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
 })
 
 const handleSend = () => {
@@ -100,7 +136,7 @@ const toggleVoiceSimulation = () => {
   } else {
     isListening.value = true
     setTimeout(() => {
-      inputQuery.value = "Tìm giúp tôi tai nghe chống ồn dưới 8 triệu có pin lâu"
+      inputQuery.value = "Tìm giúp tôi áo khoác hoodie thời trang"
       isListening.value = false
     }, 1200)
   }
@@ -117,7 +153,11 @@ const formatMessageText = (text) => {
 }
 
 const formatCurrency = (val) => {
-  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0)
+  const num = Number(val || 0)
+  if (num > 0 && num < 1000) {
+    return `$${num.toFixed(2)}`
+  }
+  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num)
 }
 
 const toggleSqlView = (index) => {
@@ -134,13 +174,10 @@ const toggleSqlView = (index) => {
         <div>
           <h1 class="font-bold text-zinc-900 text-base leading-tight flex items-center gap-1.5">
             Trợ Lý Mua Sắm AI
-            <span class="inline-flex items-center px-1.5 py-0.2 text-[10px] font-bold bg-pink-50 text-pink-600 rounded-full border border-pink-200">
-              AI Copilot
-            </span>
           </h1>
-          <p class="text-[11px] text-pink-600 font-medium flex items-center gap-1.5">
-            <span class="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse"></span>
-            Hồng Đen Edition • Trực tuyến
+          <p class="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            Trực tuyến • Sẵn sàng hỗ trợ
           </p>
         </div>
       </div>
@@ -156,23 +193,96 @@ const toggleSqlView = (index) => {
       </div>
     </header>
 
-    <!-- 2. AI Model Status Bar (Static - Que2Search + Qdrant) -->
-    <div class="px-4 py-2 bg-zinc-50 border-b border-zinc-200 shrink-0 z-10">
-      <div class="flex items-center justify-between gap-2">
-        <div class="flex items-center gap-1.5 text-xs text-zinc-600 font-medium">
+    <!-- 2. AI Model Selector: Dropdown (Dropbox) -->
+    <div ref="dropdownRef" class="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200 shrink-0 z-30 relative">
+      <div class="flex items-center justify-between gap-2 mb-1.5">
+        <div class="flex items-center gap-1.5 text-xs text-zinc-700 font-bold">
           <Cpu class="w-3.5 h-3.5 text-pink-600" />
-          <span>Mô hình AI:</span>
+          <span>Mô hình AI Embedding:</span>
         </div>
-
-        <!-- Static Model Badge (No Dropdown) -->
-        <div class="flex items-center gap-2 px-3 py-1 rounded-lg border border-pink-200/80 bg-white text-xs font-semibold text-zinc-800 shadow-2xs">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span>Que2Search + Qdrant</span>
-          <span class="text-[10px] text-pink-700 bg-pink-50 px-1.5 py-0.2 rounded font-bold border border-pink-200">
-            Vector Search ⚡
-          </span>
-        </div>
+        <span class="text-[10px] font-bold text-pink-600 bg-pink-50 px-2 py-0.5 rounded-full border border-pink-200">
+          {{ activeModel().badge }}
+        </span>
       </div>
+
+      <!-- Dropdown Trigger Button -->
+      <div class="relative">
+        <button
+          @click="isDropdownOpen = !isDropdownOpen"
+          type="button"
+          class="w-full flex items-center justify-between gap-2 px-3 py-2 bg-white rounded-xl border border-zinc-200 hover:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-500/20 shadow-2xs text-left cursor-pointer transition-all"
+          :class="{ 'ring-2 ring-pink-500/30 border-pink-400': isDropdownOpen }"
+        >
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+            <div class="min-w-0">
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs font-bold text-zinc-900 truncate">{{ activeModel().name }}</span>
+                <span class="text-[10px] font-bold text-pink-600 bg-pink-50 px-1.5 py-0.2 rounded border border-pink-200 shrink-0">
+                  {{ activeModel().badge || 'Auto-CoT 🌟' }}
+                </span>
+              </div>
+            </div>
+          </div>
+          <ChevronDown class="w-4 h-4 text-zinc-400 shrink-0 transition-transform duration-200" :class="{ 'rotate-180 text-pink-600': isDropdownOpen }" />
+        </button>
+
+        <!-- Dropdown Menu List (Popover) -->
+        <transition
+          enter-active-class="transition duration-150 ease-out"
+          enter-from-class="transform scale-95 opacity-0"
+          enter-to-class="transform scale-100 opacity-100"
+          leave-active-class="transition duration-100 ease-in"
+          leave-from-class="transform scale-100 opacity-100"
+          leave-to-class="transform scale-95 opacity-0"
+        >
+          <div
+            v-if="isDropdownOpen"
+            class="absolute top-full left-0 right-0 mt-1.5 bg-white rounded-xl border border-zinc-200 shadow-xl shadow-zinc-900/10 py-1.5 z-50 overflow-hidden"
+          >
+            <div class="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-zinc-400 border-b border-zinc-100 mb-1">
+              Chọn mô hình AI tìm kiếm
+            </div>
+
+            <button
+              v-for="m in displayModels"
+              :key="m.id"
+              @click="selectModel(m.id)"
+              type="button"
+              class="w-full px-3 py-2.5 flex items-start justify-between gap-2 text-left hover:bg-pink-50/70 transition-colors cursor-pointer group"
+              :class="{ 'bg-pink-50/90 border-l-3 border-pink-600': selectedModelId === m.id }"
+            >
+              <div class="flex items-start gap-2.5 min-w-0">
+                <span 
+                  class="w-2 h-2 rounded-full mt-1.5 shrink-0"
+                  :class="selectedModelId === m.id ? 'bg-emerald-500 ring-2 ring-emerald-500/20 animate-pulse' : 'bg-zinc-300 group-hover:bg-pink-400'"
+                ></span>
+                <div class="min-w-0">
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-xs font-bold text-zinc-900 group-hover:text-pink-700">{{ m.name }}</span>
+                    <span class="text-[10px] font-semibold text-zinc-500 bg-zinc-100 px-1.5 py-0.2 rounded">
+                      {{ m.type === 'llm' ? 'Local LLM' : 'Auto-CoT' }}
+                    </span>
+                  </div>
+                  <p class="text-[11px] text-zinc-500 mt-0.5 line-clamp-1 leading-snug">{{ m.description }}</p>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-1 shrink-0 mt-0.5">
+                <span class="text-[10px] font-bold text-pink-600 bg-pink-100/70 px-1.5 py-0.5 rounded">
+                  {{ m.badge.split(' ')[0] }}
+                </span>
+                <Check v-if="selectedModelId === m.id" class="w-4 h-4 text-pink-600 stroke-[2.5]" />
+              </div>
+            </button>
+          </div>
+        </transition>
+      </div>
+
+      <!-- Model description snippet -->
+      <p class="mt-1.5 text-[11px] text-zinc-500 truncate leading-tight">
+        💡 {{ activeModel().description }}
+      </p>
     </div>
 
     <!-- Quick Suggestion Chips Carousel -->
@@ -232,17 +342,17 @@ const toggleSqlView = (index) => {
               <div v-if="msg.products && msg.products.length > 0" class="mt-3 pt-3 border-t border-zinc-100 space-y-2">
                 <div class="flex items-center justify-between text-[11px] font-bold text-zinc-500">
                   <span class="flex items-center gap-1 text-pink-600">
-                    <Sparkles class="w-3 h-3" />
-                    <span>Gợi ý trực tiếp ({{ msg.products.length }})</span>
+                    <Sparkles class="w-3.5 h-3.5" />
+                    <span>Gợi ý phù hợp & liên quan ({{ msg.products.length }})</span>
                   </span>
                   <span v-if="msg.searchMethod" class="text-[10px] text-zinc-400 font-normal">
-                    {{ msg.searchMethod.includes('Vector') ? '⚡ Qdrant Vector Search' : '🔍 Tìm kiếm từ khóa' }}
+                    {{ msg.searchMethod.includes('Auto-CoT') ? '🧠 Auto-CoT Hybrid Search' : (msg.searchMethod.includes('Vector') ? '⚡ Qdrant Vector Search' : '🔍 ' + msg.searchMethod) }}
                   </span>
                 </div>
 
-                <div class="space-y-2 max-h-64 overflow-y-auto pr-1">
+                <div class="space-y-2 max-h-72 overflow-y-auto pr-1">
                   <div 
-                    v-for="prod in msg.products.slice(0, 4)" 
+                    v-for="prod in msg.products" 
                     :key="prod.id"
                     class="p-2 rounded-xl bg-zinc-50 hover:bg-pink-50/50 border border-zinc-200/80 hover:border-pink-300 transition-all flex items-center gap-2.5 group/item"
                   >
@@ -254,16 +364,39 @@ const toggleSqlView = (index) => {
                     />
                     <div class="flex-1 min-w-0">
                       <div class="flex items-center gap-1 mb-0.5">
-                        <span v-if="prod.matchScore" class="text-[10px] font-black text-pink-600 bg-pink-100 px-1.5 py-0.2 rounded shrink-0">
-                          🎯 {{ Math.round(prod.matchScore * 100) }}%
+                        <span 
+                          v-if="prod.matchScore !== undefined && prod.matchScore !== null" 
+                          class="text-[10px] font-black px-1.5 py-0.2 rounded shrink-0 shadow-2xs"
+                          :class="[
+                            (prod.matchScore > 1 ? prod.matchScore : prod.matchScore * 100) >= 95
+                              ? 'bg-rose-600 text-white font-black'
+                              : (prod.matchScore > 1 ? prod.matchScore : prod.matchScore * 100) >= 80
+                                ? 'bg-pink-100 text-pink-700'
+                                : 'bg-zinc-200 text-zinc-700'
+                          ]"
+                        >
+                          {{ (prod.matchScore > 1 ? prod.matchScore : prod.matchScore * 100) >= 95 ? '🔥' : '✨' }}
+                          {{ Math.round(prod.matchScore > 1 ? prod.matchScore : prod.matchScore * 100) }}%
                         </span>
                         <h4 
                           @click="emit('view-details', prod)"
                           class="text-xs font-bold text-zinc-900 truncate group-hover/item:text-pink-600 cursor-pointer"
+                          :title="prod.name"
                         >
                           {{ prod.name }}
                         </h4>
                       </div>
+
+                      <!-- DB Variant details: Color, Size, Department, Stock -->
+                      <div class="flex items-center gap-1.5 text-[10px] text-zinc-500 mb-1">
+                        <span v-if="prod.color" class="text-zinc-600 font-medium">🎨 {{ prod.color }}</span>
+                        <span v-if="prod.size" class="text-zinc-600 font-medium">📏 {{ prod.size }}</span>
+                        <span v-if="prod.matchReason" class="text-pink-600 font-semibold truncate max-w-[100px]" :title="prod.matchReason">
+                          🎯 {{ prod.matchReason }}
+                        </span>
+                        <span v-else-if="prod.stockQuantity" class="text-emerald-600 font-semibold">({{ prod.stockQuantity }} sp)</span>
+                      </div>
+
                       <div class="flex items-center justify-between gap-1">
                         <span class="text-xs font-black text-pink-600">
                           {{ formatCurrency(prod.finalPrice || prod.originalPrice) }}

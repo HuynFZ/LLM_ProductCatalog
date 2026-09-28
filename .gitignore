@@ -1,0 +1,44 @@
+# Python & Virtual Environments
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+dist/
+*.egg-info/
+
+# H&M Raw Data & Large Datasets (Liên hệ Huy để lấy data đưa vào backend/data/)
+backend/data/images/
+backend/data/articles.csv
+backend/data/*.csv
+backend/data/*.json
+backend/data/*.gz
+backend/data/*.zip
+backend/images/
+backend/articles.csv
+*.jsonl.gz
+*.csv.gz
+
+# Frontend (Node.js & Vite)
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+frontend/.env.*.local
+
+# Environment & Local Secrets
+.env
+.env.*
+!.env.example
+
+# OS & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
