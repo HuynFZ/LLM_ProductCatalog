@@ -4,7 +4,9 @@ import json
 import re
 
 # Hỗ trợ cả chạy cục bộ và chạy bên trong Docker container
-OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
+_raw_ollama_url = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
+# Tự động khắc phục lỗi chính tả phổ biến (localhhost -> localhost)
+OLLAMA_URL = _raw_ollama_url.replace("localhhost", "localhost")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:3b")
 
 # Toàn bộ 62 danh mục sản phẩm chính xác có trong CSDL H&M
@@ -29,11 +31,12 @@ CATEGORY_SYNONYMS = {
     "mũ lưỡi trai": "Cap/peaked", "nón kết": "Cap/peaked", "cap": "Cap/peaked",
     "mũ cói": "Straw hat", "nón cói": "Straw hat",
     "mũ": "Hat/beanie", "nón": "Hat/beanie",
+    "đồ quàng cổ": "Scarf", "quàng cổ": "Scarf", "khăn quàng cổ": "Scarf", "khăn len": "Scarf", "giữ ấm cổ": "Scarf",
     "khăn": "Scarf", "khăn choàng": "Scarf", "khăn quàng": "Scarf", "scarf": "Scarf",
     "thắt lưng": "Belt", "dây nịt": "Belt", "belt": "Belt",
     "túi": "Bag", "túi xách": "Bag", "balo": "Bag", "ví": "Bag", "bag": "Bag",
     "kính": "Sunglasses", "kính râm": "Sunglasses", "kính mát": "Sunglasses", "sunglasses": "Sunglasses",
-    "ô": "Umbrella", "dù": "Umbrella", "umbrella": "Umbrella",
+    "đồ che mưa": "Umbrella", "che mưa": "Umbrella", "cây dù": "Umbrella", "cái dù": "Umbrella", "cây ô": "Umbrella", "cái ô": "Umbrella", "ô": "Umbrella", "dù": "Umbrella", "umbrella": "Umbrella",
     "cà vạt": "Tie", "tie": "Tie",
     "tất": "Socks", "vớ": "Socks", "socks": "Socks", "sock": "Socks",
     "vòng cổ": "Necklace", "dây chuyền": "Necklace",
@@ -68,6 +71,8 @@ CATEGORY_SYNONYMS = {
     "áo lót": "Bra", "áo ngực": "Bra", "bra": "Bra",
     "quần lót": "Underwear bottom", "quần sịp": "Underwear bottom", "quần chip": "Underwear bottom", "sịp": "Underwear bottom",
     "bikini": "Bikini top", "đồ bơi": "Swimsuit", "áo tắm": "Swimsuit", "quần bơi": "Swimwear bottom",
+    "đồ bơi liền thân": "Swimsuit", "đồ bơi một mảnh": "Swimsuit", "đồ bơi 1 mảnh": "Swimsuit",
+    "áo tắm liền thân": "Swimsuit", "áo tắm 1 mảnh": "Swimsuit", "ngâm mình dưới nước": "Swimsuit",
 
     # Giày dép
     "giày sneaker": "Sneakers", "giày thể thao": "Sneakers", "sneaker": "Sneakers", "sneakers": "Sneakers",
@@ -77,14 +82,16 @@ CATEGORY_SYNONYMS = {
     "dép": "Slippers", "dép lê": "Slippers", "slippers": "Slippers",
     "giày": "Sneakers",
 
-    # Trẻ em & Đồ ngủ
+    # Trẻ em & Đồ ngủ & Jumpsuit
     "bodysuit": "Bodysuit", "đồ liền thân": "Bodysuit", "romper": "Bodysuit",
+    "jumpsuit": "Jumpsuit/Playsuit", "playsuit": "Jumpsuit/Playsuit", "bộ jumpsuit": "Jumpsuit/Playsuit", "đồ bay": "Jumpsuit/Playsuit",
     "bộ đồ ngủ": "Pyjama set", "đồ ngủ": "Pyjama set", "pyjama": "Pyjama set", "pajamas": "Pyjama set",
     "váy ngủ": "Night gown", "áo choàng ngủ": "Robe", "áo choàng": "Robe"
 }
 
 # Các nhóm danh mục liên quan gần gũi (Related Taxonomy Links)
 RELATED_CATEGORIES_MAP = {
+    "Jumpsuit/Playsuit": ["Dress", "Trousers", "Bodysuit"],
     "T-shirt": ["Top", "Shirt", "Polo shirt"],
     "Shirt": ["T-shirt", "Blouse", "Top"],
     "Top": ["T-shirt", "Vest top", "Blouse"],
@@ -95,9 +102,9 @@ RELATED_CATEGORIES_MAP = {
     "Jacket": ["Coat", "Blazer", "Hoodie"],
     "Blazer": ["Jacket", "Shirt", "Tailored Waistcoat"],
     "Coat": ["Jacket"],
-    "Dress": ["Skirt"],
+    "Dress": ["Skirt", "Jumpsuit/Playsuit"],
     "Skirt": ["Dress"],
-    "Trousers": ["Shorts", "Leggings/Tights"],
+    "Trousers": ["Shorts", "Leggings/Tights", "Jumpsuit/Playsuit"],
     "Shorts": ["Trousers"],
     "Bra": ["Underwear bottom", "Bikini top"],
     "Underwear bottom": ["Bra"],
@@ -114,6 +121,7 @@ RELATED_CATEGORIES_MAP = {
 }
 
 COMMON_RULES = """Lưu ý đặc thù của hệ thống phân loại H&M:
+- Jumpsuit, playsuit, đồ bay, bộ liền quần phải map vào "Jumpsuit/Playsuit".
 - Áo sơ mi phải map vào "Shirt" (tuyệt đối KHÔNG chọn "T-shirt").
 - Áo thun, áo phông cộc tay phải map vào "T-shirt".
 - Găng tay, bao tay phải map vào "Gloves".
@@ -128,7 +136,8 @@ COMMON_RULES = """Lưu ý đặc thù của hệ thống phân loại H&M:
 - Áo nỉ có mũ map vào "Hoodie".
 - Quần dài các loại (jeans, kaki, tây, suông) map vào "Trousers".
 - Quần đùi, soóc map vào "Shorts".
-- Giày thể thao map vào "Sneakers", giày bốt map vào "Boots"."""
+- Giày thể thao map vào "Sneakers", giày bốt map vào "Boots".
+- Khăn quàng cổ, đồ quàng cổ, khăn len, khăn choàng giữ ấm map vào "Scarf"."""
 
 # ==============================================================================
 # HÀM BÓC TÁCH RULE-BASED THÔNG MINH CHO H&M
@@ -162,9 +171,11 @@ def rule_based_cot_fallback(user_query: str, available_categories: list) -> dict
         "trắng": "White", "white": "White",
         "be": "Beige", "kem": "Light Beige", "beige": "Beige",
         "xám": "Grey", "ghi": "Grey", "grey": "Grey", "gray": "Grey",
+        "xanh biển": "Blue", "xanh nước biển": "Blue", "xanh da trời": "Light Blue", "xanh ngọc": "Light Turquoise",
         "xanh dương": "Blue", "xanh lam": "Dark Blue", "xanh navy": "Dark Blue", "navy": "Dark Blue", "blue": "Blue",
         "xanh lá": "Green", "green": "Green",
-        "đỏ": "Dark Red", "red": "Dark Red",
+        "đỏ đô": "Dark Red", "đỏ thẫm": "Dark Red", "đỏ đậm": "Dark Red",
+        "đỏ tươi": "Red", "đỏ": "Red", "red": "Red",
         "hồng": "Pink", "pink": "Pink",
         "vàng": "Yellow", "yellow": "Yellow",
         "nâu": "Brown", "brown": "Brown",
@@ -187,7 +198,7 @@ def rule_based_cot_fallback(user_query: str, available_categories: list) -> dict
 
     # 5. Phát hiện giá tối đa
     max_price = None
-    price_match = re.search(r'(dưới|tầm|khoảng|giá\s*rẻ\s*hơn|<|<=)\s*(\d+(\.\d+)?)', q)
+    price_match = re.search(r'(dưới|tầm|khoảng|giá\s*rẻ\s*hơn|tối\s*đa|nhỏ\s*hơn|<|<=)\s*(\d+(\.\d+)?)', q)
     if price_match:
         try:
             val = float(price_match.group(2))
@@ -240,7 +251,7 @@ def cot_unified_search_intent(user_query: str, db_categories: list = None, avail
 
     # Gom nhóm danh mục rút gọn để LLM 3B dễ xử lý nhất
     grouped_categories_hint = (
-        "Quần áo: T-shirt, Shirt, Dress, Skirt, Trousers, Shorts, Sweater, Hoodie, Jacket, Blazer, Coat, Vest top, Top\n"
+        "Quần áo: T-shirt, Shirt, Dress, Skirt, Trousers, Shorts, Sweater, Hoodie, Jacket, Blazer, Coat, Vest top, Top, Jumpsuit/Playsuit\n"
         "Đồ lót & Đồ bơi: Bra, Underwear bottom, Bikini top, Swimsuit, Leggings/Tights\n"
         "Giày dép & Phụ kiện: Sneakers, Boots, Sandals, Gloves, Bag, Belt, Scarf, Socks, Hat/beanie, Cap/peaked, Sunglasses"
     )
@@ -269,7 +280,7 @@ Mẫu JSON bắt buộc (toàn bộ diễn giải trong thought_process và suy_
 {{
   "thought_process": [
     "Thought 1: Phân tích ngữ nghĩa yêu cầu khách hàng sang thuật ngữ thời trang quốc tế.",
-    "Thought 2: Xác định danh mục H&M chính xác (ví dụ: {hint_cat or 'T-shirt/Shirt/Dress/Gloves/Bra/Sneakers'}).",
+    "Thought 2: Xác định danh mục H&M chính xác (ví dụ: {hint_cat or 'T-shirt/Shirt/Dress/Jumpsuit/Playsuit/Gloves/Bra/Sneakers'}).",
     "Thought 3: Trích xuất màu sắc ('{hint_col or 'White/Black...'}'), size, giới tính ('{hint_gen or 'Mens/Ladies/Kids'}'), giá tối đa dạng số.",
     "Thought 4: Lập chiến lược truy vấn CSDL lọc danh mục và thuộc tính."
   ],
@@ -287,12 +298,15 @@ Mẫu JSON bắt buộc (toàn bộ diễn giải trong thought_process và suy_
         "stream": False,
         "format": "json",
         "options": {
-            "temperature": 0.0
+            "temperature": 0.0,
+            "num_predict": 600
         }
     }
 
     try:
-        response = requests.post(OLLAMA_URL, json=payload, timeout=20)
+        # Ưu tiên dùng 127.0.0.1 thay cho localhost trên Windows để tránh chậm phân giải IPv6
+        target_url = OLLAMA_URL.replace("localhost", "127.0.0.1") if "localhost" in OLLAMA_URL else OLLAMA_URL
+        response = requests.post(target_url, json=payload, timeout=40)
         response.raise_for_status()
         raw_content = response.json().get("response", "{}")
         
@@ -363,17 +377,19 @@ Mẫu JSON bắt buộc (toàn bộ diễn giải trong thought_process và suy_
         thought_process = []
         if isinstance(raw_thoughts, list):
             for t in raw_thoughts:
-                if isinstance(t, str) and len(t.strip()) > 5:
+                if isinstance(t, str) and len(t.strip()) > 5 and not t.strip().lower().startswith("suy_luan"):
                     thought_process.append(t.strip())
 
         # Nếu thought_process bị thiếu hoặc mâu thuẫn (như nói không có màu dù màu tồn tại), dùng chuẩn hóa CoT 4 bước
         has_color_conflict = color and any("không có" in t.lower() and "màu" in t.lower() for t in thought_process)
         if len(thought_process) < 3 or has_color_conflict:
+            strategy_thought = f"Tìm các sản phẩm thuộc danh mục '{category}' và lọc biến thể có màu '{color or 'bất kỳ'}'." if category else f"Truy vấn ngữ nghĩa Vector Search trên Qdrant kết hợp lọc thuộc tính màu '{color or 'bất kỳ'}'."
+            cat_thought = f"Đối chiếu với danh mục H&M, yêu cầu được ánh xạ chính xác vào danh mục '{category}'." if category else "Yêu cầu tự do theo phong cách/ngữ cảnh, kích hoạt tìm kiếm ngữ nghĩa Vector Search."
             thought_process = [
                 f"Thought 1: Khách hàng đang tìm kiếm '{user_query}'{' dành cho ' + gender if gender else ''}.",
-                f"Thought 2: Đối chiếu với danh mục H&M, yêu cầu được ánh xạ chính xác vào danh mục '{category or 'Thời trang'}'.",
+                f"Thought 2: {cat_thought}",
                 f"Thought 3: Trích xuất thuộc tính: Màu sắc = '{color or 'Tự do'}', Giới tính = '{gender or 'Tất cả'}', Size = '{size or 'Tự do'}', Mức giá = {f'${max_price}' if max_price else 'Không giới hạn'}.",
-                f"Thought 4: Lập chiến lược CSDL: Tìm các sản phẩm thuộc danh mục '{category}' và lọc biến thể có màu '{color or 'bất kỳ'}'."
+                f"Thought 4: Lập chiến lược CSDL: {strategy_thought}"
             ]
 
         suy_luan = clean_val(data.get("suy_luan"))

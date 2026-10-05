@@ -245,7 +245,8 @@ def process_chat(request: ChatRequest):
         
         color_out_of_stock = cot_info.get('color_out_of_stock', False)
         target_color = cot_info.get('color')
-        primary_cat = cot_info.get('intent', {}).get('category') or (cot_info.get('predicted_categories', [None])[0])
+        pred_cats = cot_info.get('predicted_categories') or []
+        primary_cat = (cot_info.get('intent') or {}).get('category') or (pred_cats[0] if pred_cats else None)
         
         if color_out_of_stock and target_color and primary_cat:
             all_avail = []

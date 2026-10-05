@@ -13,12 +13,33 @@ from llm_agent import (
     ALL_HM_CATEGORIES,
     RELATED_CATEGORIES_MAP
 )
+from vector_service import search_semantic
 
 GENDER_MAP = {
     "Ladies": ["Ladieswear", "Divided"],
     "Mens": ["Menswear"],
     "Kids": ["Baby/Children"]
 }
+
+COLOR_FAMILIES = ["red", "blue", "green", "pink", "yellow", "orange", "brown", "white", "black", "grey", "gray", "purple", "beige"]
+
+def check_color_affinity(target_col: str, candidate_col: str) -> int:
+    """
+    Tính điểm tương quan màu sắc:
+    20 điểm: Khớp chính xác hoặc chứa chuỗi (vd: 'red' in 'other red', 'dark red' in 'dark red')
+    16 điểm: Cùng một họ màu cơ bản (vd: yêu cầu 'dark red' nhưng kho có 'other red', 'red', 'light red')
+    0 điểm: Khác họ màu
+    """
+    if not target_col or not candidate_col:
+        return 0
+    t = target_col.strip().lower()
+    c = candidate_col.strip().lower()
+    if t == c or t in c or c in t:
+        return 20
+    for fam in COLOR_FAMILIES:
+        if fam in t and fam in c:
+            return 16
+    return 0
 
 # ==========================================
 # 1. ĐỊNH DẠNG KẾT QUẢ TÌM KIẾM
@@ -215,7 +236,7 @@ def execute_hybrid_search(user_query: str):
             if color_lower:
                 for prod in primary_products:
                     for v in (prod.variants or []):
-                        if v.color and color_lower in v.color.lower():
+                        if v.color and check_color_affinity(color_lower, v.color) > 0:
                             primary_color_matched = True
                             break
                     if primary_color_matched:
@@ -245,11 +266,10 @@ def execute_hybrid_search(user_query: str):
 
                     # Điểm màu sắc (Tối đa 20 điểm)
                     if color_lower:
-                        if color_lower in v_color:
-                            v_score += 20
+                        affinity = check_color_affinity(color_lower, v.color)
+                        v_score += affinity
+                        if affinity > 0:
                             this_prod_color_match = True
-                        else:
-                            v_score += 0
                     else:
                         v_score += 20
 
@@ -307,20 +327,62 @@ def execute_hybrid_search(user_query: str):
         if slots_needed > 0:
             supp_categories = related_categories if primary_category else []
             if not primary_category and not supp_categories:
-                # Không có danh mục cụ thể, tìm kiếm theo thuộc tính (màu sắc, giới tính, giá)
-                attr_query = db.query(Product).join(ProductVariant)
-                if color_lower:
-                    attr_query = attr_query.filter(ProductVariant.color.ilike(f"%{color_lower}%"))
-                if target_gender_groups:
-                    attr_query = attr_query.filter(Product.gender_group.in_(target_gender_groups))
-                supp_products = attr_query.limit(24).all()
-                for prod in supp_products:
-                    variants = prod.variants or []
-                    best_v = variants[0] if variants else None
-                    scored_secondary.append((
-                        0.85,
-                        SearchResult(prod, best_v, match_score=0.85, match_reason=f"Phù hợp màu {target_color or ''}")
-                    ))
+                # Không có danh mục cụ thể hoặc khách dùng từ ngữ tự do, phong cách, mô tả
+                # => KÍCH HOẠT TÌM KIẾM NGỮ NGHĨA VECTOR SEARCH TRÊN QDRANT!
+                print(f"🔮 [Semantic Vector Search] Kích hoạt Qdrant tìm kiếm vector cho: '{user_query}'")
+                semantic_hits = search_semantic(
+                    query_text=user_query,
+                    color=target_color,
+                    gender_groups=target_gender_groups,
+                    max_price=target_max_price,
+                    limit=24
+                )
+                
+                hit_art_ids = [h["article_id"] for h in semantic_hits if h.get("article_id")]
+                if hit_art_ids:
+                    found_variants = db.query(ProductVariant).filter(ProductVariant.article_id.in_(hit_art_ids)).all()
+                    var_by_art = {v.article_id: v for v in found_variants}
+                    
+                    seen_pids = set()
+                    for h in semantic_hits:
+                        art = h["article_id"]
+                        matched_var = var_by_art.get(art)
+                        prod = matched_var.product if matched_var else None
+                        if not prod or str(prod.id) in seen_pids:
+                            continue
+                        seen_pids.add(str(prod.id))
+                        
+                        cos_sim = h.get("score", 0.7)
+                        # Chuẩn hóa điểm Cosine similarity nomic-embed-text sang thang điểm 70% - 98%
+                        norm_pct = min(max(round(0.5 + (cos_sim * 0.6), 2), 0.70), 0.98)
+                        
+                        scored_secondary.append((
+                            norm_pct,
+                            SearchResult(
+                                prod,
+                                matched_var,
+                                match_score=norm_pct,
+                                match_reason=f"Khớp ngữ nghĩa ({int(norm_pct*100)}% tương đồng vector)"
+                            )
+                        ))
+                        if len(scored_secondary) >= 12:
+                            break
+
+                # Dự phòng cuối cùng nếu Qdrant chưa có sản phẩm phù hợp
+                if not scored_secondary:
+                    attr_query = db.query(Product).join(ProductVariant)
+                    if color_lower:
+                        attr_query = attr_query.filter(ProductVariant.color.ilike(f"%{color_lower}%"))
+                    if target_gender_groups:
+                        attr_query = attr_query.filter(Product.gender_group.in_(target_gender_groups))
+                    supp_products = attr_query.limit(12).all()
+                    for prod in supp_products:
+                        variants = prod.variants or []
+                        best_v = variants[0] if variants else None
+                        scored_secondary.append((
+                            0.75,
+                            SearchResult(prod, best_v, match_score=0.75, match_reason=f"Phù hợp màu {target_color or ''}")
+                        ))
             elif supp_categories and not scored_primary:
                 # Danh mục chính hoàn toàn không có trong kho, chuyển sang danh mục phụ
                 sec_query = db.query(Product).join(ProductVariant).filter(Product.product_type.in_(supp_categories))

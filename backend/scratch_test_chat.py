@@ -3,7 +3,7 @@ import json
 
 resp = requests.post(
     "http://127.0.0.1:8080/api/chat",
-    json={"query": "Tìm mua áo thun nam màu đen size L dưới 50"},
+    json={"query": "tìm trang phục ấm áp giữ nhiệt mùa đông màu đen"},
     timeout=60
 )
 print("STATUS CODE:", resp.status_code)
