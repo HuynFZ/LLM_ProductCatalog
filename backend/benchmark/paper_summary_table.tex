@@ -1,0 +1,26 @@
+\begin{table}
+\caption{Comprehensive Performance Evaluation of 8 LLM Architectures under Zero-shot and Graph-CoT Prompting.}
+\label{tab:llm_benchmark_all}
+\begin{tabular}{llrrrrrr}
+\toprule
+Model & Prompt_Type & Total_Queries & SQL_Success_Rate & JSON_Valid_Rate & Avg_Latency_ms & P95_Latency_ms & Hallucination_Rate \\
+\midrule
+deepseek-r1:7b & Graph-CoT & 100 & 10.000000 & 25.000000 & 81097.610000 & 99364.460000 & 3.000000 \\
+deepseek-r1:7b & Zero-shot & 100 & 62.000000 & 90.000000 & 70574.150000 & 99140.700000 & 25.000000 \\
+gemini-1.5-flash & Graph-CoT & 100 & 100.000000 & 100.000000 & 2289.010000 & 3185.260000 & 0.000000 \\
+gemini-1.5-flash & Zero-shot & 100 & 100.000000 & 100.000000 & 1259.050000 & 1563.790000 & 0.000000 \\
+gemma2:2b & Graph-CoT & 100 & 59.000000 & 94.000000 & 7190.220000 & 10304.630000 & 34.000000 \\
+gemma2:2b & Zero-shot & 100 & 94.000000 & 100.000000 & 3161.600000 & 3141.390000 & 5.000000 \\
+gpt-4o-mini & Graph-CoT & 100 & 100.000000 & 100.000000 & 4301.110000 & 5698.110000 & 0.000000 \\
+gpt-4o-mini & Zero-shot & 100 & 100.000000 & 100.000000 & 1889.800000 & 2437.070000 & 0.000000 \\
+llama3.1:8b & Graph-CoT & 100 & 95.000000 & 100.000000 & 79898.300000 & 134035.100000 & 5.000000 \\
+llama3.1:8b & Zero-shot & 100 & 97.000000 & 100.000000 & 24868.060000 & 42522.780000 & 3.000000 \\
+mistral:7b & Graph-CoT & 100 & 89.000000 & 98.000000 & 95085.580000 & 149303.500000 & 7.000000 \\
+mistral:7b & Zero-shot & 100 & 90.000000 & 100.000000 & 37369.790000 & 49358.910000 & 3.000000 \\
+qwen2.5-coder:7b & Graph-CoT & 100 & 85.000000 & 90.000000 & 78575.990000 & 131603.720000 & 3.000000 \\
+qwen2.5-coder:7b & Zero-shot & 100 & 100.000000 & 100.000000 & 18191.710000 & 22450.130000 & 0.000000 \\
+qwen2.5:3b & Graph-CoT & 100 & 89.000000 & 100.000000 & 4586.630000 & 5504.340000 & 10.000000 \\
+qwen2.5:3b & Zero-shot & 100 & 94.000000 & 94.000000 & 3268.980000 & 12068.170000 & 0.000000 \\
+\bottomrule
+\end{tabular}
+\end{table}

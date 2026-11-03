@@ -1,0 +1,46 @@
+flowchart LR
+    subgraph UI ["1. Presentation Layer"]
+        Client["React + Vite UI\n(Search & Chat Interface)"]
+    end
+
+    subgraph API ["2. API Gateway"]
+        FastAPI["FastAPI Controller\n(/api/search)"]
+    end
+
+    subgraph Agent ["3. Cognitive Agent Layer (Graph-CoT)"]
+        direction TB
+        LLMGateway["Unified LLM Gateway\n(Ollama / OpenAI / Gemini)"]
+        CoT["Graph-CoT 4-Step Reasoning\n(Intent, Semantic, Entity, Strategy)"]
+        LLMGateway --> CoT
+    end
+
+    subgraph HybridEngine ["4. Dual Retrieval Engine"]
+        direction TB
+        subgraph SQLBranch ["Branch A: Relational Retrieval"]
+            SQLGen["Dynamic SQL Generator\n(Filter: Color, Size, Price)"]
+            MySQL[("MySQL 8.0\n(47k Products, 385k Variants)")]
+            SQLGen --> MySQL
+        end
+
+        subgraph VectorBranch ["Branch B: Semantic Retrieval"]
+            Embedder["Embedding Model\n(nomic-embed-text)"]
+            Qdrant[("Qdrant Vector DB\n(Dense Vectors)")]
+            Embedder --> Qdrant
+        end
+    end
+
+    subgraph Fusion ["5. Hybrid Fusion & Ranking"]
+        direction TB
+        Ranker["Score Fusion & Category Hierarchy\n(Color Affinity + Vector Sim)"]
+        Response["Final Ranked Products\n+ Reasoning Explanation"]
+        Ranker --> Response
+    end
+
+    Client -->|1. User Query| FastAPI
+    FastAPI -->|2. Forward Request| LLMGateway
+    CoT -->|3a. Structured Entities| SQLGen
+    CoT -->|3b. Semantic Phrase| Embedder
+    MySQL -->|Candidate SKUs| Ranker
+    Qdrant -->|Similarity Scores| Ranker
+    Response -->|4. JSON Response| FastAPI
+    FastAPI -->|5. Render Catalog & CoT| Client

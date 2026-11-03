@@ -20,6 +20,8 @@ backend/data/*.json
 backend/data/*.gz
 backend/data/*.zip
 backend/images/
+backend/.env.local
+backend/.env.*.local
 backend/articles.csv
 *.jsonl.gz
 *.csv.gz
