@@ -26,6 +26,16 @@ backend/articles.csv
 *.jsonl.gz
 *.csv.gz
 
+# Benchmark Large Datasets & Raw Cache
+*.parquet
+*.pkl
+*.pickle
+*.gz
+amazon_benchmark/data/*.gz
+amazon_benchmark/data/*.pkl
+esci_benchmark/data/*.parquet
+esci_benchmark/ecinstruct_data/
+
 # Frontend (Node.js & Vite)
 frontend/node_modules/
 frontend/dist/
