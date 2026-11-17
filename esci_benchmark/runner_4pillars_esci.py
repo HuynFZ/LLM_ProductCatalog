@@ -23,16 +23,32 @@ os.makedirs(RESULTS_DIR, exist_ok=True)
 
 # 1. NẠP KHÓA API TỪ .ENV CHO OPENAI NẾU CÓ
 def get_openai_client():
-    env_path = os.path.join(BASE_DIR, "..", "backend", ".env")
-    api_key = None
-    if os.path.exists(env_path):
-        with open(env_path, "r", encoding="utf-8") as f:
-            for line in f:
-                if line.startswith("OPENAI_API_KEY="):
-                    api_key = line.split("=", 1)[1].strip().strip('"').strip("'")
-                    break
+    try:
+        from dotenv import load_dotenv
+        load_dotenv(os.path.join(BASE_DIR, "..", ".env"))
+        load_dotenv(os.path.join(BASE_DIR, "..", "demo", "backend", ".env"))
+        load_dotenv(os.path.join(BASE_DIR, "..", "backend", ".env"))
+    except ImportError:
+        pass
+
+    api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
-        api_key = os.environ.get("OPENAI_API_KEY")
+        candidate_paths = [
+            os.path.join(BASE_DIR, "..", ".env"),
+            os.path.join(BASE_DIR, "..", "demo", "backend", ".env"),
+            os.path.join(BASE_DIR, "..", "backend", ".env")
+        ]
+        for env_path in candidate_paths:
+            if os.path.exists(env_path):
+                with open(env_path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        if line.strip().startswith("OPENAI_API_KEY="):
+                            api_key = line.split("=", 1)[1].strip().strip('"').strip("'")
+                            if api_key:
+                                break
+            if api_key:
+                break
+
     if api_key:
         from openai import OpenAI
         return OpenAI(api_key=api_key)

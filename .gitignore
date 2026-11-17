@@ -23,6 +23,16 @@ backend/images/
 backend/.env.local
 backend/.env.*.local
 backend/articles.csv
+demo/backend/data/images/
+demo/backend/data/articles.csv
+demo/backend/data/*.csv
+demo/backend/data/*.json
+demo/backend/data/*.gz
+demo/backend/data/*.zip
+demo/backend/images/
+demo/backend/.env.local
+demo/backend/.env.*.local
+demo/backend/articles.csv
 *.jsonl.gz
 *.csv.gz
 
@@ -41,6 +51,11 @@ frontend/node_modules/
 frontend/dist/
 frontend/.env.local
 frontend/.env.*.local
+demo/frontend/node_modules/
+demo/frontend/dist/
+demo/frontend/.env.local
+demo/frontend/.env.*.local
+node_modules/
 
 # Environment & Local Secrets
 .env

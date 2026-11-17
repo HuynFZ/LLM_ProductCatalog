@@ -21,9 +21,10 @@ CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(CURRENT_DIR)
 DATA_DIR = os.path.join(CURRENT_DIR, "data")
 
-# Nạp file .env từ backend hoặc root
-load_dotenv(os.path.join(ROOT_DIR, "backend", ".env"))
+# Nạp file .env từ root hoặc demo/backend
 load_dotenv(os.path.join(ROOT_DIR, ".env"))
+load_dotenv(os.path.join(ROOT_DIR, "demo", "backend", ".env"))
+load_dotenv(os.path.join(ROOT_DIR, "backend", ".env"))
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "").strip()
