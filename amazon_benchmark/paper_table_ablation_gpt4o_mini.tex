@@ -1,0 +1,24 @@
+% ==============================================================================
+% LATEX TABLE: Ablation Study of the 4-Pillars Framework on GPT-4o-mini (N=500)
+% Based on ablation_spec v1.1
+% ==============================================================================
+
+\begin{table*}[t]
+\centering
+\caption{Ablation analysis of cumulative prompt components on the Amazon Catalog benchmark ($N=500$) using GPT-4o-mini. Values report metric percentage, exact counts ($k/n$), and 95\% Wilson confidence intervals.}
+\label{tab:ablation_study_gpt4o_mini}
+\small
+\begin{tabular}{lccccccr}
+\toprule
+\textbf{Configuration} & \textbf{Hallucination $\downarrow$} & \textbf{OOC Rejection $\uparrow$} & \textbf{False Refusal $\downarrow$} & \textbf{$C_{neg}$ Cons $\uparrow$} & \textbf{Cons Grounded $\uparrow$} & \textbf{Pros \& Cons $\uparrow$} & \textbf{Latency P95} \\
+\midrule
+\textbf{A0} (Baseline / Naive) & 37.8\% [33.7, 42.1] & 64.0\% [50.1, 75.9] & 60.9\% [56.3, 65.3] & 100.0\% [96.3, 100.0] & 71.0\% [61.5, 79.0] & 59.3\% [54.7, 63.8] & 4,731 ms \\
+\textbf{A1} (+ Profile) & 4.6\% [3.1, 6.8] & \textbf{100.0\%} [92.9, 100.0] & 94.9\% [92.4, 96.6] & 90.0\% [82.6, 94.5] & 81.1\% [71.8, 87.9] & 22.9\% [19.2, 27.0] & 4,881 ms \\
+\textbf{A2} (+ RAG Context) & 6.6\% [4.7, 9.1] & \textbf{100.0\%} [92.9, 100.0] & 3.8\% [2.4, 6.0] & 99.0\% [94.6, 99.8] & 69.7\% [60.0, 77.9] & \textbf{96.4\%} [94.3, 97.8] & 4,847 ms \\
+\textbf{A3} (+ $C_{neg}$ Reviews) & 7.2\% [5.2, 9.8] & \textbf{100.0\%} [92.9, 100.0] & \textbf{2.9\%} [1.7, 4.9] & \textbf{100.0\%} [96.3, 100.0] & 94.0\% [87.5, 97.2] & 54.4\% [49.8, 59.0] & \textbf{3,660 ms} \\
+\textbf{A4} (+ 4-Step CoT) & 6.8\% [4.9, 9.4] & \textbf{100.0\%} [92.9, 100.0] & 5.8\% [4.0, 8.3] & 99.0\% [94.6, 99.8] & 93.9\% [87.4, 97.2] & 24.4\% [20.7, 28.6] & 5,433 ms \\
+\textbf{A5} (+ Self-Check) & 6.8\% [4.9, 9.4] & \textbf{100.0\%} [92.9, 100.0] & 5.6\% [3.8, 8.1] & 98.0\% [93.0, 99.4] & 92.9\% [86.0, 96.5] & 22.2\% [18.6, 26.3] & 5,286 ms \\
+\textbf{A6} (+ 2nd-turn Verifier) & \textbf{6.2\%} [4.4, 8.7] & \textbf{100.0\%} [92.9, 100.0] & 7.3\% [5.3, 10.1] & 99.0\% [94.6, 99.8] & \textbf{96.0\%} [90.1, 98.4] & 22.2\% [18.6, 26.3] & 5,540 ms \\
+\bottomrule
+\end{tabular}
+\end{table*}

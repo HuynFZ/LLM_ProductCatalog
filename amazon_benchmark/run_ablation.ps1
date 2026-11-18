@@ -1,4 +1,4 @@
-﻿# run_ablation.ps1 — Script tiện ích chạy thực nghiệm Ablation trên PowerShell
+# run_ablation.ps1 — Script tiện ích chạy thực nghiệm Ablation trên PowerShell
 
 param(
     [string]$Target = "gpt-4o-mini", # gpt-4o-mini, qwen2.5:3b, llama3.2:3b, all, table
