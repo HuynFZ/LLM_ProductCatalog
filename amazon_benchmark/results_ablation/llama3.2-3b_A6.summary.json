@@ -1,0 +1,169 @@
+{
+  "model": "llama3.2:3b",
+  "config": "A6",
+  "components": [
+    "profile",
+    "rag",
+    "cneg",
+    "cot",
+    "selfcheck",
+    "verifier"
+  ],
+  "model_id_used": [
+    "llama3.2:3b"
+  ],
+  "temperature": 0.0,
+  "max_tokens": 1500,
+  "seed": 42,
+  "k": 5,
+  "neg_r": 1,
+  "ooc_context": "decoy",
+  "prompt_version": "1aa74657",
+  "judge_model": "gpt-4o-mini",
+  "n_total": 500,
+  "n_api_error": 0,
+  "parse_fail": {
+    "pct": 0.0,
+    "k": 0,
+    "n": 500,
+    "ci95": [
+      0.0,
+      0.8
+    ]
+  },
+  "hallucination_any_valid": {
+    "pct": 2.6,
+    "k": 13,
+    "n": 500,
+    "ci95": [
+      1.5,
+      4.4
+    ]
+  },
+  "hallu_asin_incatalog": {
+    "pct": 0.2,
+    "k": 1,
+    "n": 450,
+    "ci95": [
+      0.0,
+      1.2
+    ]
+  },
+  "hallu_attr_incatalog": {
+    "pct": 4.4,
+    "k": 12,
+    "n": 270,
+    "ci95": [
+      2.6,
+      7.6
+    ]
+  },
+  "unsupported_rec_incatalog": {
+    "pct": 0.2,
+    "k": 1,
+    "n": 450,
+    "ci95": [
+      0.0,
+      1.2
+    ]
+  },
+  "rec_is_gold_incatalog": {
+    "pct": 57.8,
+    "k": 260,
+    "n": 450,
+    "ci95": [
+      53.2,
+      62.3
+    ]
+  },
+  "ooc_correct": {
+    "pct": 100.0,
+    "k": 50,
+    "n": 50,
+    "ci95": [
+      92.9,
+      100.0
+    ]
+  },
+  "ooc_wrong_rec": {
+    "pct": 0.0,
+    "k": 0,
+    "n": 50,
+    "ci95": [
+      0.0,
+      7.1
+    ]
+  },
+  "false_refusal_incatalog": {
+    "pct": 40.4,
+    "k": 182,
+    "n": 450,
+    "ci95": [
+      36.0,
+      45.0
+    ]
+  },
+  "cons_nonempty_cneg_pre": {
+    "pct": 96.0,
+    "k": 96,
+    "n": 100,
+    "ci95": [
+      90.2,
+      98.4
+    ]
+  },
+  "cons_nonempty_cneg_final": {
+    "pct": 99.0,
+    "k": 99,
+    "n": 100,
+    "ci95": [
+      94.6,
+      99.8
+    ]
+  },
+  "pros_cons_balanced_incatalog": {
+    "pct": 60.4,
+    "k": 272,
+    "n": 450,
+    "ci95": [
+      55.9,
+      64.9
+    ]
+  },
+  "cons_grounded_cneg": {
+    "pct": 68.7,
+    "k": 68,
+    "n": 99,
+    "ci95": [
+      59.0,
+      77.0
+    ]
+  },
+  "verifier_needed": {
+    "pct": 1.8,
+    "k": 9,
+    "n": 500,
+    "ci95": [
+      0.9,
+      3.4
+    ]
+  },
+  "verifier_success_given_triggered": {
+    "pct": 88.9,
+    "k": 8,
+    "n": 9,
+    "ci95": [
+      56.5,
+      98.0
+    ]
+  },
+  "latency_first_call_ms": {
+    "mean": 10916.9,
+    "p95": 15755.4
+  },
+  "latency_total_ms": {
+    "mean": 10976.1,
+    "p95": 15755.4
+  },
+  "tokens_total_mean": 2110.0
+}
