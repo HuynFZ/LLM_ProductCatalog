@@ -46,29 +46,31 @@
 
 ---
 
-## 2. Các Phát Hiện Khoa Học & Bằng Chứng Giải Phẫu Mẫu Thô
+## 2. Diễn Giải Khoa Học Có Căn Cứ & Bằng Chứng Giải Phẫu Mẫu Thô
 
-1. **Hiệu quả thực của RAG đối với Mô hình Local (trong điều kiện ngữ cảnh đúng sẵn):**
-   - Khi có RAG và giải mã HTML đúng, tỷ lệ ảo giác của Qwen2.5:3B giảm sốc **70 lần**: từ **56.2% (A0) xuống 0.8% (A2)** ($\Delta = -38.0\%^*$).
-   - Ở LLaMA-3.2:3B, ảo giác giảm từ **64.1% xuống 4.2%** ($\Delta = -15.1\%^*$).
-   - Tỷ lệ chọn đúng sản phẩm (Gold Rec) tăng vọt từ 0.0% lên **79.6% (Qwen)** và **65.1% (LLaMA)**.
-   - Đối với GPT-4o-mini, khi có RAG, mô hình đạt **0.0% ảo giác** (0 ca sai brand, 0 ca sai giá).
+1. **Ảo giác thuộc tính có cấu trúc trong điều kiện ngữ cảnh đúng sẵn (Oracle Context):**
+   - **Phạm vi kiểm tra:** Chỉ số ảo giác ở đây chỉ kiểm tra các trường có cấu trúc (`recommended_item_id`, `brand`, `price_usd`). Chưa bao hàm kiểm định tính trung thực của văn bản tự do `response_to_user` (nơi mô hình vẫn có thể bịa công dụng hoặc thành phần).
+   - **Vai trò của A0 và A1:** Ở A0 và A1, hệ thống không cung cấp danh mục sản phẩm nhưng schema JSON vẫn bắt buộc điền mã ASIN. Mô hình không thể biết trước mã ASIN nội bộ của kho, do đó tỷ lệ ảo giác cao ở A0 (37.8%–64.1%) là hệ quả tất yếu do thiết kế đối chứng không có tri thức (Zero-knowledge control).
+   - **Kết luận:** **Trong điều kiện ngữ cảnh đúng sẵn** (ngữ cảnh đã chứa sản phẩm đích + 4 sản phẩm gây nhiễu), ảo giác về các trường có cấu trúc gần như bằng 0 (GPT-4o-mini: 0.0%, Qwen2.5:3B: 0.4%, LLaMA-3.2:3B: 0.8%). Kết quả này chưa phản ánh hiệu năng của một hệ thống RAG đầy đủ ngoài thực tế (nơi module truy xuất có thể trả về tập ứng viên thiếu sản phẩm đích).
 
-2. **Persona và Ràng buộc nâng cao OOC nhưng gây "tê liệt" nếu thiếu RAG (A1):**
-   - Ràng buộc phòng thủ giúp chặn OOC tăng vọt lên 82%–100%, nhưng nếu không có RAG cung cấp danh mục (A1), mô hình từ chối nhầm tới **94.9% (GPT)**, **79.5% (LLaMA)**, và **57.6% (Qwen)**.
-   - Ở A1, con số ảo giác thấp (4.6% ở GPT) chỉ là ảo ảnh thống kê do mô hình hầu như không trả lời. Với 23 mẫu hiếm hoi mà nó trả lời, tỷ lệ ảo giác là **100.0% (23/23)**.
+2. **Tác động của Persona phòng thủ khi không có ngữ cảnh (A1):**
+   - Khi đưa vào Persona và quy tắc ràng buộc (A1), khả năng chặn câu hỏi ngoài danh mục OOC tăng mạnh lên 82.0%–100.0%.
+   - Tuy nhiên, do không có dữ liệu danh mục để đối soát, mô hình bị rơi vào tình trạng từ chối nhầm gần như toàn bộ (GPT-4o-mini từ chối nhầm 94.9%, LLaMA từ chối 79.5%). 
+   - Ảo giác thấp ở A1 của GPT (4.6%) thực chất là do mẫu số trả lời chỉ còn 23/450 mẫu; và trong 23 mẫu đó, 100% đều là ảo giác.
 
 3. **Hiện tượng nén khóa Schema (Schema Key Substitution) ở Qwen CoT (A4):**
-   - Việc bổ sung chuỗi suy luận 4 bước ở A4 khiến mô hình 3B hiểu nhầm rằng khóa `thought_3_pros_cons` đã thay thế hai mảng `pros` và `cons`.
-   - Mô hình vẫn phân tích ưu/nhược điểm rất chi tiết trong trường thought, nhưng bỏ trống hai khóa đầu ra JSON, khiến chỉ số tụt xuống 7.1%.
-   - Verifier lượt 2 (A6) đóng vai trò bộ sửa cấu trúc (Structural Repair), khôi phục thành công 41/41 ca $C_{neg}$.
+   - Chuỗi suy luận 4 bước trong cấu hình A4 (`thought_1` đến `thought_4`) khiến mô hình 3B hiểu nhầm trường văn bản `thought_3_pros_cons` đã thay thế hai mảng `pros` và `cons`.
+   - Đọc mẫu thô xác nhận mô hình vẫn phân tích ưu nhược điểm chi tiết trong thought, nhưng lược bỏ hoàn toàn hai khóa mảng ở JSON gốc. 
+   - Verifier lượt 2 (A6) đóng vai trò bộ sửa cấu trúc (Structural Repair), phát hiện trường cons rỗng và bổ sung lại đúng schema JSON (sửa 41/41 ca $C_{neg}$).
 
-4. **Hiện tượng Siêu cảnh giác (Hyper-vigilance) và Rào cản Từ chối nhầm ở SLM:**
-   - Dù đạt 100% OOC Rejection ở A6, Qwen từ chối nhầm tới **54.2%** và LLaMA từ chối nhầm **40.4%** yêu cầu hợp lệ.
-   - Nguyên nhân chính: Ở 100 mẫu $C_{neg}$, mô hình 3B nhầm lẫn giữa *cảnh báo nhược điểm* và *từ chối sản phẩm*, dẫn đến việc bật cờ từ chối phạm vi `is_out_of_catalog_rejected` ở **90.0% số mẫu $C_{neg}$**!
-   - Đây là bằng chứng thực nghiệm rõ ràng cho thấy **SLM chưa thể đạt mức độ vận hành tin cậy tương đương Cloud LLM**.
+4. **Phân tích hành vi từ chối ở mô hình Edge (Qwen và LLaMA):**
+   - Theo [analysis_refusal.md](file:///d:/LLM_ProductCatalog/amazon_benchmark/results_ablation/analysis_refusal.md), tỷ lệ từ chối nhầm ở cấu hình A6 của Qwen là **54.2%** (243/448) và LLaMA là **40.4%** (182/450).
+   - Bóc tách theo bản chất hành vi:
+     - **Trên 100 mẫu $C_{neg}$:** Qwen có **90.0%** (90/100) bật cờ từ chối phạm vi `is_out_of_catalog_rejected`, và **7.0%** (7/100) không bật cờ nhưng để `recommended_item_id = null`. Tổng cộng có **97.0%** (97/100) mẫu $C_{neg}$ không đưa ra đề xuất. Việc mô hình từ chối gợi ý khi sản phẩm có đánh giá tiêu cực thực tế có thể là lời khuyên thận trọng và hợp lý của một trợ lý tư vấn; tuy nhiên việc bật cờ OOC cho thấy mô hình nhầm lẫn ngữ nghĩa giữa "ngoài phạm vi ngành hàng" và "sản phẩm không phù hợp do có nhược điểm".
+     - **Trên 348 mẫu Standard:** Qwen có **23.3%** (81/348) bật cờ OOC và **18.7%** (65/348) không gợi ý (tổng từ chối: **42.0%**).
+   - Tỷ lệ từ chối cao này là rào cản lớn nhất ngăn cản việc triển khai SLM nguyên bản ra thực tế thương mại, khẳng định SLM chưa thể đạt mức độ vận hành tin cậy tương đương Cloud LLM.
 
 5. **Đánh đổi về Độ trễ và Vi phạm SLA 10 giây ở Mô hình Edge:**
-   - GPT-4o-mini đáp ứng tốt SLA ở toàn bộ cấu hình (P95: 3.66s – 5.54s).
+   - GPT-4o-mini đáp ứng tốt ngưỡng tương tác thời gian thực ở toàn bộ cấu hình (P95: 3.66s – 5.54s).
    - Mô hình Local chỉ đạt SLA ở các cấu hình tinh gọn A0–A3 (3.4s – 6.9s).
-   - Ở cấu hình đầy đủ A6, cơ chế Verifier 2 lượt khiến P95 tăng vọt lên **13.5s (Qwen)** và **15.8s (LLaMA)**, với 23.8% – 61.4% số yêu cầu vượt ngưỡng 10s. Khung đầy đủ trên Edge hiện chưa khả thi cho tương tác thời gian thực nếu không tối ưu hóa suy luận (quantization, speculative decoding).
+   - Cấu hình đầy đủ A6 vi phạm nghiêm trọng SLA 10 giây: Qwen P95 đạt **13.5s** (23.8% yêu cầu > 10s) và LLaMA P95 đạt **15.8s** (61.4% yêu cầu > 10s). Quá trình gọi suy luận lần hai của Verifier trên phần cứng Edge tạo ra gánh nặng độ trễ quá lớn.
