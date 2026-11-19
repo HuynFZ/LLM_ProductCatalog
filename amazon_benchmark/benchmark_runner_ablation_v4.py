@@ -148,8 +148,65 @@ def query_model(model_name: str, system_prompt, user_prompt: str, cfg: dict, tim
 
 
 # ==============================================================================
-# 2. PROMPT v1.2: CÁC KHỐI GHÉP THEO THÀNH PHẦN (ĐÃ TINH CHỈNH)
+# 2. PROMPT DEFINITIONS: v1.1 vs v1.2
 # ==============================================================================
+PROFILE_BLOCK_V11 = """Bạn là "BeautyAdvisor" — Chuyên viên Tư vấn Mua sắm Mỹ phẩm Khách quan của sàn thương mại điện tử Amazon Beauty.
+
+PHẠM VI HOẠT ĐỘNG:
+- Bạn CHỈ tư vấn sản phẩm Làm đẹp & Mỹ phẩm (chăm sóc da, trang điểm, chăm sóc tóc, nước hoa, chăm sóc cá nhân, dụng cụ làm đẹp).
+- Nếu khách hỏi về mặt hàng ngoài phạm vi trên (ví dụ: điện tử, thời trang, đồ gia dụng) hoặc về sản phẩm không tồn tại, hãy lịch sự từ chối, đặt "is_out_of_catalog_rejected": true và "recommended_item_id": null.
+
+RÀNG BUỘC BẮT BUỘC:
+1. TUYỆT ĐỐI không bịa đặt tên sản phẩm, mã ASIN, thương hiệu, thành phần hoặc giá tiền không có trong thông tin được cung cấp.
+2. Nếu không đủ thông tin để tư vấn chắc chắn, hãy nói thẳng là chưa đủ thông tin thay vì đoán.
+3. Luôn cân bằng: khi tư vấn một sản phẩm, nêu cả ưu điểm lẫn nhược điểm/lưu ý.
+4. Trả lời khách bằng ngôn ngữ của họ (mặc định tiếng Việt)."""
+
+RAG_BLOCK_V11 = """DỮ LIỆU DANH MỤC (GROUNDING):
+- CHỈ được gợi ý và nhắc tới sản phẩm có trong phần [DANH MỤC SẢN PHẨM]. Mã ASIN, thương hiệu và giá phải khớp 100% với danh mục.
+- Nếu không có sản phẩm nào trong danh mục phù hợp với yêu cầu, hãy đặt "recommended_item_id": null và giải thích, không bịa sản phẩm."""
+
+CNEG_BLOCK_V11 = """CÂN BẰNG ĐA CHIỀU (ĐÁNH GIÁ TIÊU CỰC):
+- Với mỗi sản phẩm được gợi ý, BẮT BUỘC nêu ít nhất 1 nhược điểm/cảnh báo thực tế dựa trên [ĐÁNH GIÁ TIÊU CỰC TỪ NGƯỜI DÙNG].
+- Nhược điểm phải là thông tin có thật từ đánh giá, không được tự sáng tác. Nếu không có đánh giá tiêu cực nào, hãy nói rõ là chưa ghi nhận phản hồi tiêu cực."""
+
+COT_BLOCK_V11 = """QUY TRÌNH SUY LUẬN BẮT BUỘC (4 BƯỚC) — điền lần lượt vào các trường thought_1 ... thought_4 của JSON:
+1. Phân tích ngữ cảnh & nhu cầu (loại da, mối quan tâm, ngân sách; yêu cầu có thuộc phạm vi không).
+2. Đối soát danh mục: chỉ chọn sản phẩm thực sự phù hợp, chỉ từ [DANH MỤC SẢN PHẨM].
+3. Cân bằng ưu/nhược điểm dựa trên đánh giá tiêu cực.
+4. Quyết định: gợi ý hay từ chối, kèm lý do ngắn gọn."""
+
+SELFCHECK_BLOCK_V11 = """TỰ KIỂM TRA TRƯỚC KHI TRẢ LỜI (bắt buộc):
+[ ] Mã ASIN gợi ý (nếu có) có nằm trong [DANH MỤC SẢN PHẨM] không? Thương hiệu và giá có khớp danh mục không?
+[ ] Nếu yêu cầu ngoài phạm vi: đã đặt is_out_of_catalog_rejected=true và recommended_item_id=null chưa?
+[ ] Nếu có gợi ý: mảng "cons" có ít nhất 1 nhược điểm bám theo đánh giá tiêu cực chưa?
+Nếu có điều kiện nào chưa đạt, hãy sửa lại rồi mới xuất JSON."""
+
+BLOCKS_V11 = [
+    ("profile", PROFILE_BLOCK_V11),
+    ("rag", RAG_BLOCK_V11),
+    ("cneg", CNEG_BLOCK_V11),
+    ("cot", COT_BLOCK_V11),
+    ("selfcheck", SELFCHECK_BLOCK_V11),
+]
+
+COT_LINES_V11 = [
+    '"thought_1_context": "phân tích nhu cầu và phạm vi yêu cầu"',
+    '"thought_2_catalog_check": "đối soát với danh mục sản phẩm"',
+    '"thought_3_pros_cons": "cân bằng ưu và nhược điểm"',
+    '"thought_4_decision": "quyết định gợi ý hay từ chối, kèm lý do"',
+]
+
+SCHEMA_LINES_V11 = [
+    '"response_to_user": "câu trả lời gửi khách hàng"',
+    '"recommended_item_id": "mã ASIN của sản phẩm gợi ý, hoặc null nếu không gợi ý sản phẩm nào"',
+    '"brand": "thương hiệu của sản phẩm được gợi ý, hoặc null"',
+    '"price_usd": số (USD) của sản phẩm được gợi ý, hoặc null',
+    '"is_out_of_catalog_rejected": true nếu bạn từ chối vì yêu cầu ngoài phạm vi của sàn, ngược lại false',
+    '"pros": ["ưu điểm 1", "ưu điểm 2"]',
+    '"cons": ["nhược điểm/cảnh báo 1"]',
+]
+
 PROFILE_BLOCK_V12 = """Bạn là "BeautyAdvisor" — Chuyên viên Tư vấn Mua sắm Mỹ phẩm Khách quan của sàn thương mại điện tử Amazon Beauty.
 
 PHẠM VI HOẠT ĐỘNG:
@@ -213,8 +270,10 @@ SCHEMA_LINES_V12 = [
 ZERO_MSG = "[Hệ thống: tìm kiếm trong danh mục không trả về sản phẩm nào.]"
 
 
-def schema_text(cot: bool) -> str:
-    lines = (COT_LINES_V12 if cot else []) + SCHEMA_LINES_V12
+def schema_text(cot: bool, prompt_version: str = "v1.2") -> str:
+    cot_lines = COT_LINES_V12 if prompt_version == "v1.2" else COT_LINES_V11
+    schema_lines = SCHEMA_LINES_V12 if prompt_version == "v1.2" else SCHEMA_LINES_V11
+    lines = (cot_lines if cot else []) + schema_lines
     return "{\n" + ",\n".join("  " + ln for ln in lines) + "\n}"
 
 
@@ -280,9 +339,10 @@ def build_context(sample: dict, kb: dict, k: int, neg_r: int, neg_index: dict,
             "neg_n": neg_n, "gold_id": gold_id}
 
 
-def build_prompts(sample: dict, comps: list, ctx: dict) -> tuple:
+def build_prompts(sample: dict, comps: list, ctx: dict, prompt_version: str = "v1.2") -> tuple:
     use = set(comps)
-    blocks = [txt for name, txt in BLOCKS_V12 if name in use]
+    blocks_def = BLOCKS_V12 if prompt_version == "v1.2" else BLOCKS_V11
+    blocks = [txt for name, txt in blocks_def if name in use]
     system_prompt = "\n\n".join(blocks) if blocks else None
 
     parts = []
@@ -293,14 +353,34 @@ def build_prompts(sample: dict, comps: list, ctx: dict) -> tuple:
                      f"[/ĐÁNH GIÁ TIÊU CỰC TỪ NGƯỜI DÙNG]")
     parts.append(f'Khách hàng hỏi: "{sample.get("user_query", "")}"')
     parts.append("Chỉ trả về MỘT khối JSON hợp lệ theo cấu trúc sau, không thêm văn bản nào ngoài JSON:\n"
-                 + schema_text("cot" in use))
+                 + schema_text("cot" in use, prompt_version=prompt_version))
     return system_prompt, "\n\n".join(parts)
 
 
-def _prompt_version() -> str:
-    return "v1.2"
-
-PROMPT_VERSION = _prompt_version()
+def is_placeholder_cons(cons_list) -> bool:
+    """
+    Kiểm tra xem mảng cons có phải là câu ghi nhận mặc định (placeholder) hay không.
+    Ví dụ: 'Chưa ghi nhận phản hồi tiêu cực trên hệ thống', 'Không có đánh giá xấu', v.v.
+    """
+    if not cons_list or not isinstance(cons_list, list):
+        return False
+    placeholder_patterns = [
+        r"chưa\s*(có|ghi\s*nhận)",
+        r"không\s*(có|tìm\s*thấy|ghi\s*nhận)\s*(đánh\s*giá|phản\s*hồi|review|khiếu\s*nại|nhược\s*điểm)",
+        r"chưa\s*thấy\s*phản\s*hồi",
+        r"no\s*negative\s*review",
+        r"không\s*có\s*nhược\s*điểm\s*nào",
+        r"chưa\s*ghi\s*nhận\s*phản\s*hồi\s*tiêu\s*cực",
+        r"không\s*có\s*thông\s*tin\s*tiêu\s*cực",
+    ]
+    valid_items = [str(x).strip() for x in cons_list if str(x).strip()]
+    if not valid_items:
+        return False
+    for item in valid_items:
+        text = item.lower()
+        if not any(re.search(pat, text) for pat in placeholder_patterns):
+            return False
+    return True
 
 
 # ==============================================================================
@@ -335,7 +415,12 @@ def evaluate(parsed: dict, sample: dict, kb: dict, ctx_asins: list, negative_rag
     null_rec = is_null(rec)
     rec_s = None if null_rec else str(rec).strip()
     rejected = as_bool(parsed.get("is_out_of_catalog_rejected", False))
-    pros_ne, cons_ne = nonempty_list(parsed.get("pros")), nonempty_list(parsed.get("cons"))
+    
+    pros_raw = parsed.get("pros")
+    cons_raw = parsed.get("cons")
+    pros_ne, cons_ne = nonempty_list(pros_raw), nonempty_list(cons_raw)
+    cons_is_placeholder = is_placeholder_cons(cons_raw)
+    has_real_cons = cons_ne and not cons_is_placeholder
     in_kb = rec_s is not None and rec_s in kb
 
     brand_bad = price_bad = False
@@ -358,9 +443,35 @@ def evaluate(parsed: dict, sample: dict, kb: dict, ctx_asins: list, negative_rag
 
     false_refusal = (t != OOC and (rejected or null_rec)) if not negative_rag else False
 
+    # Phân loại Cons chuẩn mực thống kê theo yêu cầu phản biện:
+    # 1. C_neg: Bắt buộc có nhược điểm THỰC TẾ (has_real_cons). Nếu ra placeholder là chưa đạt!
+    cneg_has_real_cons = bool(t == CNEG and has_real_cons)
+    cneg_placeholder_cons = bool(t == CNEG and cons_ne and cons_is_placeholder)
+    
+    # 2. Standard (in-catalog không có review tiêu cực):
+    # Chuẩn: không bịa cons (hoặc mảng rỗng hoặc ghi placeholder rõ ràng)
+    std_cons_placeholder = bool(t != OOC and t != CNEG and ((not cons_ne) or cons_is_placeholder))
+    # Ảo giác: tự bịa cons khi context không hề có review xấu!
+    std_cons_hallucinated = bool(t != OOC and t != CNEG and has_real_cons)
+
+    # Pros&Cons cân bằng:
+    if t == CNEG:
+        pros_cons_balanced = bool(pros_ne and has_real_cons)
+    elif t != OOC:
+        pros_cons_balanced = bool(pros_ne and std_cons_placeholder)
+    else:
+        pros_cons_balanced = False
+
+    hallucination_any = bool(hallu_asin or brand_bad or price_bad or (t == OOC and not null_rec) or
+                             neg_rag_hallu_gold or neg_rag_hallu_random)
+
     return {
         "rec_id_raw": rec_s, "rejected_raw": rejected,
-        "pros_nonempty": pros_ne, "cons_nonempty": cons_ne, "pros_cons_balanced": pros_ne and cons_ne,
+        "pros_nonempty": pros_ne, "cons_nonempty": cons_ne,
+        "cons_is_placeholder": cons_is_placeholder, "has_real_cons": has_real_cons,
+        "cneg_has_real_cons": cneg_has_real_cons, "cneg_placeholder_cons": cneg_placeholder_cons,
+        "std_cons_placeholder": std_cons_placeholder, "std_cons_hallucinated": std_cons_hallucinated,
+        "pros_cons_balanced": pros_cons_balanced,
         "hallu_asin": hallu_asin, "hallu_attr": brand_bad or price_bad,
         "brand_mismatch": brand_bad, "price_mismatch": price_bad,
         "rec_outside_context": outside_ctx,
@@ -371,6 +482,7 @@ def evaluate(parsed: dict, sample: dict, kb: dict, ctx_asins: list, negative_rag
         "false_refusal": false_refusal,
         "cons_missing": t == CNEG and not cons_ne,
         "rec_nonnull": not null_rec,
+        "hallucination_any": hallucination_any,
         "neg_rag_correct": neg_rag_correct,
         "neg_rag_hallu_gold": neg_rag_hallu_gold,
         "neg_rag_picked_decoy": neg_rag_picked_decoy,
@@ -379,15 +491,16 @@ def evaluate(parsed: dict, sample: dict, kb: dict, ctx_asins: list, negative_rag
 
 
 # ==============================================================================
-# 4. RULE-BASED PARSER REPAIR (SLA < 10s OPTIMIZATION)
+# 4. RULE-BASED PARSER REPAIR (SLA < 10s OPTIMIZATION, NO ORACLE / NO GOLD_ID)
 # ==============================================================================
 def rule_based_repair(parsed: dict, sample: dict, kb: dict, ctx_asins: list, negative_rag: bool = False) -> tuple:
     """
-    Sửa lỗi nhanh dựa trên luật (0ms latency):
+    Sửa lỗi nhanh thuần parser (0ms latency, TUYỆT ĐỐI KHÔNG DÙNG ORACLE / GOLD_ID):
     1. Trích xuất pros/cons từ thought nếu model để trống mảng ngoài JSON.
-    2. Sửa cờ is_out_of_catalog_rejected nếu câu hỏi là mỹ phẩm nội bộ nhưng model nhầm cờ.
+    2. Giải quyết mâu thuẫn nội bộ: nếu model gợi ý ASIN trong danh mục nhưng lại bật cờ từ chối, reset cờ về false.
     3. Tự điền brand/price từ KB nếu model chọn đúng ASIN trong danh mục nhưng thiếu trường.
-    4. Sửa OOC nếu model từ chối trong text nhưng quên bật cờ / quên đặt rec=null.
+    4. Sửa OOC nếu model từ chối trong text nhưng quên format schema cờ / quên đặt rec=null.
+    5. Khôi phục recommended_item_id nếu model nhắc ASIN trong context ở thought/text nhưng quên điền key ngoài.
     """
     if not parsed or not isinstance(parsed, dict):
         return parsed, False, []
@@ -395,7 +508,6 @@ def rule_based_repair(parsed: dict, sample: dict, kb: dict, ctx_asins: list, neg
     repaired = dict(parsed)
     actions = []
     t = sample.get("test_type")
-    gold_id = (sample.get("ground_truth_target") or {}).get("item_id")
     rec = repaired.get("recommended_item_id")
     null_rec = is_null(rec)
     rec_s = None if null_rec else str(rec).strip()
@@ -440,38 +552,8 @@ def rule_based_repair(parsed: dict, sample: dict, kb: dict, ctx_asins: list, neg
             repaired["cons"] = ["Chưa ghi nhận phản hồi tiêu cực trên hệ thống"]
             actions.append("grounded_empty_cons_default")
 
-    # 3. Sửa cờ từ chối nhầm trên mẫu in-catalog
-    if t != OOC and as_bool(repaired.get("is_out_of_catalog_rejected", False)):
-        if not null_rec or (gold_id and gold_id in str(repaired)):
-            repaired["is_out_of_catalog_rejected"] = False
-            actions.append("reset_ooc_flag_on_incatalog")
-            if null_rec and gold_id and gold_id in ctx_asins:
-                repaired["recommended_item_id"] = gold_id
-                actions.append("recovered_rec_from_context")
-
-    # 4. Tự điền thuộc tính nếu đã chọn đúng ASIN trong KB
-    if rec_s and rec_s in kb:
-        info = kb[rec_s]
-        if is_null(repaired.get("brand")):
-            repaired["brand"] = html.unescape(str(info.get("brand", "")))
-            actions.append("fill_brand_from_kb")
-        if is_null(repaired.get("price_usd")) and info.get("price"):
-            repaired["price_usd"] = float(info["price"])
-            actions.append("fill_price_from_kb")
-
-    # 5. Sửa mẫu OOC nếu text đã từ chối rõ ràng nhưng quên format schema
-    if t == OOC:
-        resp_text = str(repaired.get("response_to_user", "")).lower()
-        if any(w in resp_text for w in ["không thuộc", "ngoài phạm vi", "không có sản phẩm", "không bán", "không tìm thấy", "chỉ tư vấn", "từ chối"]):
-            if not as_bool(repaired.get("is_out_of_catalog_rejected", False)):
-                repaired["is_out_of_catalog_rejected"] = True
-                actions.append("repaired_ooc_flag_from_text")
-            if not null_rec:
-                repaired["recommended_item_id"] = None
-                actions.append("cleared_rec_for_ooc")
-
-    # 6. Khôi phục recommended_item_id nếu model đã nhận diện sản phẩm trong danh mục nhưng quên điền key (chỉ trong Oracle RAG)
-    if not negative_rag and t != OOC and is_null(repaired.get("recommended_item_id")):
+    # 3. Khôi phục recommended_item_id nếu model đã nhận diện sản phẩm trong danh mục nhưng quên điền key ngoài (chỉ trong Oracle RAG)
+    if not negative_rag and null_rec:
         full_text = " ".join(str(v) for v in repaired.values())
         matched_asin = None
         for a in ctx_asins:
@@ -500,10 +582,36 @@ def rule_based_repair(parsed: dict, sample: dict, kb: dict, ctx_asins: list, neg
                     break
         if matched_asin:
             repaired["recommended_item_id"] = matched_asin
+            rec_s = matched_asin
+            null_rec = False
             actions.append(f"recovered_rec_id_{matched_asin}")
-            if as_bool(repaired.get("is_out_of_catalog_rejected", False)):
-                repaired["is_out_of_catalog_rejected"] = False
-                actions.append("reset_ooc_flag_on_recovered_rec")
+
+    # 4. Giải quyết mâu thuẫn nội bộ về cờ từ chối
+    if rec_s and rec_s in ctx_asins and as_bool(repaired.get("is_out_of_catalog_rejected", False)):
+        repaired["is_out_of_catalog_rejected"] = False
+        actions.append("reset_contradictory_ooc_flag")
+
+    # 5. Tự điền thuộc tính nếu đã chọn đúng ASIN trong KB
+    if rec_s and rec_s in kb:
+        info = kb[rec_s]
+        if is_null(repaired.get("brand")):
+            repaired["brand"] = html.unescape(str(info.get("brand", "")))
+            actions.append("fill_brand_from_kb")
+        if is_null(repaired.get("price_usd")) and info.get("price"):
+            repaired["price_usd"] = float(info["price"])
+            actions.append("fill_price_from_kb")
+
+    # 6. Sửa mẫu OOC nếu text đã từ chối rõ ràng nhưng quên format schema
+    resp_text = str(repaired.get("response_to_user", "")).lower()
+    ooc_keywords = ["không thuộc", "ngoài phạm vi", "không có sản phẩm", "không bán", "không tìm thấy", "chỉ tư vấn", "từ chối"]
+    if any(w in resp_text for w in ooc_keywords):
+        if null_rec or (rec_s and rec_s not in ctx_asins):
+            if not as_bool(repaired.get("is_out_of_catalog_rejected", False)):
+                repaired["is_out_of_catalog_rejected"] = True
+                actions.append("repaired_ooc_flag_from_text")
+            if not null_rec:
+                repaired["recommended_item_id"] = None
+                actions.append("cleared_rec_for_ooc")
 
     return repaired, len(actions) > 0, actions
 
@@ -568,7 +676,11 @@ BOOL_COLS = ["api_error", "parse_fail", "json_valid", "hallu_asin", "hallu_attr"
              "rec_is_gold", "ooc_wrong_rec", "ooc_correct", "false_refusal", "cons_nonempty",
              "cons_nonempty_pre", "pros_cons_balanced", "cons_missing", "needs_correction",
              "verifier_triggered", "verifier_success", "rule_repaired", "hallucination_any", "rec_nonnull",
-             "neg_rag_correct", "neg_rag_hallu_gold", "neg_rag_picked_decoy", "neg_rag_hallu_random"]
+             "neg_rag_correct", "neg_rag_hallu_gold", "neg_rag_picked_decoy", "neg_rag_hallu_random",
+             "pre_false_refusal", "pre_ooc_correct", "pre_ooc_wrong_rec", "pre_hallucination_any",
+             "pre_pros_cons_balanced", "pre_cons_nonempty", "pre_has_real_cons", "pre_cneg_has_real_cons",
+             "pre_std_cons_hallucinated", "cneg_has_real_cons", "cneg_placeholder_cons",
+             "std_cons_placeholder", "std_cons_hallucinated"]
 
 
 def summarize(df: pd.DataFrame, meta: dict) -> dict:
@@ -580,16 +692,22 @@ def summarize(df: pd.DataFrame, meta: dict) -> dict:
     S = dict(meta)
     S["n_total"], S["n_api_error"] = int(len(df)), int(df.api_error.sum())
     S["parse_fail"] = _rate(df.parse_fail, ok)
+    S["hallucination_any_pre"] = _rate(df.pre_hallucination_any, valid)
     S["hallucination_any_valid"] = _rate(df.hallucination_any, valid)
     S["hallu_asin_incatalog"] = _rate(df.hallu_asin, valid & in_cat)
     S["hallu_attr_incatalog"] = _rate(df.hallu_attr, valid & in_cat & df.rec_nonnull)
     S["unsupported_rec_incatalog"] = _rate(df.unsupported_rec, valid & in_cat)
     S["rec_is_gold_incatalog"] = _rate(df.rec_is_gold, valid & in_cat)
+    S["ooc_correct_pre"] = _rate(df.pre_ooc_correct, ok & is_ooc)
     S["ooc_correct"] = _rate(df.ooc_correct, ok & is_ooc)
     S["ooc_wrong_rec"] = _rate(df.ooc_wrong_rec, valid & is_ooc)
+    S["false_refusal_pre_incatalog"] = _rate(df.pre_false_refusal, valid & in_cat)
     S["false_refusal_incatalog"] = _rate(df.false_refusal, valid & in_cat)
-    S["cons_nonempty_cneg_pre"] = _rate(df.cons_nonempty_pre, ok & is_cn)
-    S["cons_nonempty_cneg_final"] = _rate(df.cons_nonempty, ok & is_cn)
+    S["cneg_real_cons"] = _rate(df.cneg_has_real_cons, valid & is_cn)
+    S["cneg_placeholder_cons"] = _rate(df.cneg_placeholder_cons, valid & is_cn)
+    S["std_cons_placeholder"] = _rate(df.std_cons_placeholder, valid & in_cat & ~is_cn)
+    S["std_cons_hallucinated"] = _rate(df.std_cons_hallucinated, valid & in_cat & ~is_cn)
+    S["pros_cons_balanced_pre"] = _rate(df.pre_pros_cons_balanced, ok & in_cat)
     S["pros_cons_balanced_incatalog"] = _rate(df.pros_cons_balanced, ok & in_cat)
     judged = ok & is_cn & df.cons_grounded.notna()
     S["cons_grounded_cneg"] = _rate(df.cons_grounded.fillna(False).astype(bool), judged)
@@ -621,24 +739,30 @@ def print_summary(S: dict):
     print(f'{S["model"]} | {S["config"]} | components={S["components"]} | k={S["k"]} neg_r={S["neg_r"]} '
           f'ooc_context={S["ooc_context"]}')
     print(f'model_id_used={S["model_id_used"]}  temp={S["temperature"]}  max_tokens={S["max_tokens"]}  '
-          f'seed={S["seed"]}  prompt_version={S["prompt_version"]}')
+          f'seed={S["seed"]}  prompt_version={S["prompt_version"]}  rule_repair={S["rule_repair"]}')
     print(f'N={S["n_total"]}  api_error={S["n_api_error"]} (loại khỏi mẫu số)')
     print("-" * 90)
     for label, key in [
         ("Lỗi parse JSON", "parse_fail"),
-        ("Ảo giác tổng hợp (ASIN|thuộc tính|OOC gợi ý sai)", "hallucination_any_valid"),
+        ("Ảo giác tổng hợp (SAU sửa)", "hallucination_any_valid"),
+        ("  - Ảo giác TRƯỚC sửa luật", "hallucination_any_pre"),
         ("  - ASIN không có trong KB (mẫu trong danh mục)", "hallu_asin_incatalog"),
         ("  - Sai brand/giá so với KB", "hallu_attr_incatalog"),
         ("Gợi ý không có trong ngữ cảnh/KB", "unsupported_rec_incatalog"),
         ("Chọn đúng sản phẩm đích (gold)", "rec_is_gold_incatalog"),
-        ("OOC: từ chối đúng", "ooc_correct"),
+        ("OOC: từ chối đúng (SAU sửa)", "ooc_correct"),
+        ("  - OOC từ chối đúng (TRƯỚC sửa luật)", "ooc_correct_pre"),
         ("OOC: gợi ý sai", "ooc_wrong_rec"),
-        ("Từ chối nhầm (mẫu trong danh mục)", "false_refusal_incatalog"),
-        ("C_neg: có cons TRƯỚC Verifier", "cons_nonempty_cneg_pre"),
-        ("C_neg: có cons SAU Verifier", "cons_nonempty_cneg_final"),
+        ("Từ chối nhầm (SAU sửa, in-catalog)", "false_refusal_incatalog"),
+        ("  - Từ chối nhầm (TRƯỚC sửa luật)", "false_refusal_pre_incatalog"),
+        ("C_neg: có nhược điểm THỰC TẾ (non-placeholder)", "cneg_real_cons"),
+        ("C_neg: dùng placeholder (chưa đạt)", "cneg_placeholder_cons"),
         ("C_neg: cons bám C_neg (judge)", "cons_grounded_cneg"),
-        ("Pros&Cons (mẫu trong danh mục)", "pros_cons_balanced_incatalog"),
-        ("Sửa lỗi bằng luật (Rule Repair)", "rule_repair_rate"),
+        ("Standard: dùng placeholder/rỗng (chuẩn)", "std_cons_placeholder"),
+        ("Standard: tự bịa nhược điểm (ảo giác cons)", "std_cons_hallucinated"),
+        ("Pros&Cons cân bằng (in-catalog)", "pros_cons_balanced_incatalog"),
+        ("  - Pros&Cons (TRƯỚC sửa luật)", "pros_cons_balanced_pre"),
+        ("Tỷ lệ mẫu được sửa bởi luật (Rule Repair)", "rule_repair_rate"),
         ("Verifier cần can thiệp", "verifier_needed"),
         ("Verifier sửa thành công", "verifier_success_given_triggered"),
     ]:
@@ -711,9 +835,11 @@ def spec_status(api_error, status, parse_fail, raw) -> str:
 def run_benchmark(model_name, comps, label, limit=None, k=5, neg_r=1, ooc_context="decoy", seed=42,
                   temperature=0.0, max_tokens=None, api_model_id=None, judge_model=None,
                   retry_errors=False, out_dir=None, kb=None, testset_file=None, timeout=60,
-                  use_rule_repair=True, negative_rag=False):
+                  use_rule_repair=True, negative_rag=False, prompt_version="v1.2", label_suffix=""):
     out_dir = out_dir or DEFAULT_OUT_DIR
     os.makedirs(out_dir, exist_ok=True)
+    if label_suffix:
+        label = f"{label}_{label_suffix}"
     if negative_rag:
         label += "_negrag"
     max_tokens = max_tokens or (1500 if "cot" in comps else 1024)
@@ -722,7 +848,7 @@ def run_benchmark(model_name, comps, label, limit=None, k=5, neg_r=1, ooc_contex
     final_csv, partial_csv, jsonl, summ = base + ".csv", base + ".partial.csv", base + ".jsonl", base + ".summary.json"
     print("=" * 90)
     print(f"🚀 [Runner v4] {model_name} | {label} | {comps} | k={k} neg_r={neg_r} seed={seed} "
-          f"prompt={PROMPT_VERSION} rule_repair={use_rule_repair} negative_rag={negative_rag}")
+          f"prompt={prompt_version} rule_repair={use_rule_repair} negative_rag={negative_rag}")
     print(f"📁 Dataset: {testset_file or 'benchmark_test_500.json'}")
     print("=" * 90)
 
@@ -760,7 +886,7 @@ def run_benchmark(model_name, comps, label, limit=None, k=5, neg_r=1, ooc_contex
             continue
         t_type = sample.get("test_type")
         ctx = build_context(sample, kb, k, neg_r, neg_index, decoy_keys, ooc_context, seed, negative_rag=negative_rag)
-        sys_p, usr_p = build_prompts(sample, comps, ctx)
+        sys_p, usr_p = build_prompts(sample, comps, ctx, prompt_version=prompt_version)
 
         r = query_model(model_name, sys_p, usr_p, cfg, timeout=timeout)
         model_ids.add(r["model_id"])
@@ -800,6 +926,21 @@ def run_benchmark(model_name, comps, label, limit=None, k=5, neg_r=1, ooc_contex
 
             ev = evaluate(final, sample, kb, ctx["asins"], negative_rag=negative_rag)
 
+            row.update({
+                "pre_rec_id": ev_pre["rec_id_raw"],
+                "pre_rejected": ev_pre["rejected_raw"],
+                "pre_false_refusal": ev_pre["false_refusal"],
+                "pre_ooc_correct": ev_pre["ooc_correct"],
+                "pre_ooc_wrong_rec": ev_pre["ooc_wrong_rec"],
+                "pre_hallucination_any": ev_pre["hallucination_any"],
+                "pre_pros_cons_balanced": ev_pre["pros_cons_balanced"],
+                "pre_cons_nonempty": ev_pre["cons_nonempty"],
+                "pre_cons_is_placeholder": ev_pre["cons_is_placeholder"],
+                "pre_has_real_cons": ev_pre["has_real_cons"],
+                "pre_cneg_has_real_cons": ev_pre["cneg_has_real_cons"],
+                "pre_std_cons_hallucinated": ev_pre["std_cons_hallucinated"],
+            })
+
         row["total_latency_ms"] = round(row["latency_ms"] + row["verifier_latency_ms"], 2)
         row.update({"needs_correction": reason is not None, "correction_reason": reason,
                     "verifier_triggered": trig, "verifier_success": succ,
@@ -837,7 +978,7 @@ def run_benchmark(model_name, comps, label, limit=None, k=5, neg_r=1, ooc_contex
     meta = {"model": model_name, "config": label, "components": comps,
             "model_id_used": sorted(str(m) for m in (model_ids or set(df["model_id_used"].unique()))),
             "temperature": temperature, "max_tokens": max_tokens, "seed": seed, "k": k, "neg_r": neg_r,
-            "ooc_context": ooc_context, "prompt_version": PROMPT_VERSION, "judge_model": judge_model,
+            "ooc_context": ooc_context, "prompt_version": prompt_version, "judge_model": judge_model,
             "rule_repair": use_rule_repair, "negative_rag": negative_rag, "dataset": os.path.basename(dataset_path)}
     S = summarize(df, meta)
     with open(summ, "w", encoding="utf-8") as f:
@@ -848,7 +989,7 @@ def run_benchmark(model_name, comps, label, limit=None, k=5, neg_r=1, ooc_contex
 
 def make_table(out_dir: str, models: list) -> str:
     cols = ["hallucination_any_valid", "ooc_correct", "false_refusal_incatalog",
-            "cons_nonempty_cneg_final", "pros_cons_balanced_incatalog", "rec_is_gold_incatalog"]
+            "cneg_real_cons", "pros_cons_balanced_incatalog", "rec_is_gold_incatalog"]
     headers = ["Config", "Ảo giác↓", "Chặn OOC↑", "Từ chối nhầm↓", "C_neg cons↑", "Pros&Cons↑", "Chọn gold↑", "P95 ms↓"]
     lines = ["| " + " | ".join(headers) + " |", "| " + " | ".join(["---"] * len(headers)) + " |"]
     for m in models:
@@ -875,6 +1016,8 @@ def parse_args(argv=None):
     p.add_argument("--components", default=None)
     p.add_argument("--no_verifier", action="store_true")
     p.add_argument("--no_rule_repair", action="store_true")
+    p.add_argument("--prompt_version", choices=["v1.1", "v1.2"], default="v1.2", help="phiên bản prompt")
+    p.add_argument("--label_suffix", default="", help="hậu tố ghi chú thêm cho config label")
     p.add_argument("--limit", type=int, default=None)
     p.add_argument("--k", type=int, default=5)
     p.add_argument("--neg_r", type=int, default=1)
@@ -904,4 +1047,5 @@ if __name__ == "__main__":
                   seed=a.seed, temperature=a.temperature, max_tokens=a.max_tokens,
                   api_model_id=a.api_model_id, judge_model=a.judge_model, retry_errors=a.retry_errors,
                   out_dir=a.out_dir, testset_file=a.testset_file, timeout=a.timeout,
-                  use_rule_repair=not a.no_rule_repair, negative_rag=a.negative_rag)
+                  use_rule_repair=not a.no_rule_repair, negative_rag=a.negative_rag,
+                  prompt_version=a.prompt_version, label_suffix=a.label_suffix)
