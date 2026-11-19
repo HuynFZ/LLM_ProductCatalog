@@ -20,6 +20,7 @@
   "prompt_version": "v1.1",
   "judge_model": null,
   "rule_repair": false,
+  "verifier_mode": "observable",
   "negative_rag": false,
   "dataset": "dev_test_130.json",
   "n_total": 130,
@@ -63,10 +64,10 @@
   "hallu_attr_incatalog": {
     "pct": 0.0,
     "k": 0,
-    "n": 83,
+    "n": 38,
     "ci95": [
       0.0,
-      4.4
+      9.2
     ]
   },
   "unsupported_rec_incatalog": {
@@ -79,12 +80,12 @@
     ]
   },
   "rec_is_gold_incatalog": {
-    "pct": 92.2,
-    "k": 83,
+    "pct": 42.2,
+    "k": 38,
     "n": 90,
     "ci95": [
-      84.8,
-      96.2
+      32.5,
+      52.5
     ]
   },
   "ooc_correct_pre": {
@@ -132,7 +133,7 @@
       67.5
     ]
   },
-  "cneg_real_cons": {
+  "cneg_cons_real_pre": {
     "pct": 35.0,
     "k": 7,
     "n": 20,
@@ -141,7 +142,16 @@
       56.7
     ]
   },
-  "cneg_placeholder_cons": {
+  "cneg_cons_real": {
+    "pct": 35.0,
+    "k": 7,
+    "n": 20,
+    "ci95": [
+      18.1,
+      56.7
+    ]
+  },
+  "cneg_cons_placeholder": {
     "pct": 0.0,
     "k": 0,
     "n": 20,
@@ -150,16 +160,43 @@
       16.1
     ]
   },
-  "std_cons_placeholder": {
-    "pct": 98.6,
-    "k": 69,
-    "n": 70,
+  "cneg_cons_empty": {
+    "pct": 65.0,
+    "k": 13,
+    "n": 20,
     "ci95": [
-      92.3,
-      99.7
+      43.3,
+      81.9
     ]
   },
-  "std_cons_hallucinated": {
+  "std_cons_empty": {
+    "pct": 82.9,
+    "k": 58,
+    "n": 70,
+    "ci95": [
+      72.4,
+      89.9
+    ]
+  },
+  "std_cons_placeholder": {
+    "pct": 15.7,
+    "k": 11,
+    "n": 70,
+    "ci95": [
+      9.0,
+      26.0
+    ]
+  },
+  "std_cons_hallu_real_pre": {
+    "pct": 1.4,
+    "k": 1,
+    "n": 70,
+    "ci95": [
+      0.3,
+      7.7
+    ]
+  },
+  "std_cons_hallu_real": {
     "pct": 1.4,
     "k": 1,
     "n": 70,
@@ -195,13 +232,76 @@
       0.0
     ]
   },
-  "verifier_needed": {
-    "pct": 10.0,
-    "k": 13,
+  "rule_repair_rate": {
+    "pct": 0.0,
+    "k": 0,
     "n": 130,
     "ci95": [
-      5.9,
-      16.4
+      0.0,
+      2.9
+    ]
+  },
+  "rule_recover_asin_rate": {
+    "pct": 0.0,
+    "k": 0,
+    "n": 130,
+    "ci95": [
+      0.0,
+      2.9
+    ]
+  },
+  "rule_ooc_flag_rate": {
+    "pct": 0.0,
+    "k": 0,
+    "n": 130,
+    "ci95": [
+      0.0,
+      2.9
+    ]
+  },
+  "rule_extract_pros_cons_rate": {
+    "pct": 0.0,
+    "k": 0,
+    "n": 130,
+    "ci95": [
+      0.0,
+      2.9
+    ]
+  },
+  "rule_fill_brand_price_rate": {
+    "pct": 0.0,
+    "k": 0,
+    "n": 130,
+    "ci95": [
+      0.0,
+      2.9
+    ]
+  },
+  "verifier_needed": {
+    "pct": 17.7,
+    "k": 23,
+    "n": 130,
+    "ci95": [
+      12.1,
+      25.2
+    ]
+  },
+  "verifier_triggered": {
+    "pct": 0.0,
+    "k": 0,
+    "n": 130,
+    "ci95": [
+      0.0,
+      2.9
+    ]
+  },
+  "verifier_false_alarm": {
+    "pct": 0.0,
+    "k": 0,
+    "n": 70,
+    "ci95": [
+      0.0,
+      5.2
     ]
   },
   "verifier_success_given_triggered": {
@@ -211,15 +311,6 @@
     "ci95": [
       0.0,
       0.0
-    ]
-  },
-  "rule_repair_rate": {
-    "pct": 0.0,
-    "k": 0,
-    "n": 130,
-    "ci95": [
-      0.0,
-      2.9
     ]
   },
   "latency_first_call_ms": {

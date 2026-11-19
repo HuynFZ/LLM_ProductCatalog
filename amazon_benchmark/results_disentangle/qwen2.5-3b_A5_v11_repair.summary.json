@@ -20,6 +20,7 @@
   "prompt_version": "v1.1",
   "judge_model": null,
   "rule_repair": true,
+  "verifier_mode": "observable",
   "negative_rag": false,
   "dataset": "dev_test_130.json",
   "n_total": 130,
@@ -132,7 +133,7 @@
       15.2
     ]
   },
-  "cneg_real_cons": {
+  "cneg_cons_real_pre": {
     "pct": 35.0,
     "k": 7,
     "n": 20,
@@ -141,7 +142,16 @@
       56.7
     ]
   },
-  "cneg_placeholder_cons": {
+  "cneg_cons_real": {
+    "pct": 80.0,
+    "k": 16,
+    "n": 20,
+    "ci95": [
+      58.4,
+      91.9
+    ]
+  },
+  "cneg_cons_placeholder": {
     "pct": 0.0,
     "k": 0,
     "n": 20,
@@ -150,22 +160,49 @@
       16.1
     ]
   },
-  "std_cons_placeholder": {
-    "pct": 84.3,
-    "k": 59,
-    "n": 70,
+  "cneg_cons_empty": {
+    "pct": 20.0,
+    "k": 4,
+    "n": 20,
     "ci95": [
-      74.0,
-      91.0
+      8.1,
+      41.6
     ]
   },
-  "std_cons_hallucinated": {
-    "pct": 15.7,
-    "k": 11,
+  "std_cons_empty": {
+    "pct": 4.3,
+    "k": 3,
     "n": 70,
     "ci95": [
-      9.0,
-      26.0
+      1.5,
+      11.9
+    ]
+  },
+  "std_cons_placeholder": {
+    "pct": 70.0,
+    "k": 49,
+    "n": 70,
+    "ci95": [
+      58.5,
+      79.5
+    ]
+  },
+  "std_cons_hallu_real_pre": {
+    "pct": 1.4,
+    "k": 1,
+    "n": 70,
+    "ci95": [
+      0.3,
+      7.7
+    ]
+  },
+  "std_cons_hallu_real": {
+    "pct": 25.7,
+    "k": 18,
+    "n": 70,
+    "ci95": [
+      16.9,
+      37.0
     ]
   },
   "pros_cons_balanced_pre": {
@@ -178,33 +215,15 @@
     ]
   },
   "pros_cons_balanced_incatalog": {
-    "pct": 40.0,
-    "k": 36,
+    "pct": 71.1,
+    "k": 64,
     "n": 90,
     "ci95": [
-      30.5,
-      50.3
+      61.0,
+      79.5
     ]
   },
   "cons_grounded_cneg": {
-    "pct": 0.0,
-    "k": 0,
-    "n": 0,
-    "ci95": [
-      0.0,
-      0.0
-    ]
-  },
-  "verifier_needed": {
-    "pct": 10.0,
-    "k": 13,
-    "n": 130,
-    "ci95": [
-      5.9,
-      16.4
-    ]
-  },
-  "verifier_success_given_triggered": {
     "pct": 0.0,
     "k": 0,
     "n": 0,
@@ -220,6 +239,78 @@
     "ci95": [
       53.0,
       69.5
+    ]
+  },
+  "rule_recover_asin_rate": {
+    "pct": 34.6,
+    "k": 45,
+    "n": 130,
+    "ci95": [
+      27.0,
+      43.1
+    ]
+  },
+  "rule_ooc_flag_rate": {
+    "pct": 21.5,
+    "k": 28,
+    "n": 130,
+    "ci95": [
+      15.3,
+      29.4
+    ]
+  },
+  "rule_extract_pros_cons_rate": {
+    "pct": 55.4,
+    "k": 72,
+    "n": 130,
+    "ci95": [
+      46.8,
+      63.7
+    ]
+  },
+  "rule_fill_brand_price_rate": {
+    "pct": 33.8,
+    "k": 44,
+    "n": 130,
+    "ci95": [
+      26.3,
+      42.3
+    ]
+  },
+  "verifier_needed": {
+    "pct": 13.8,
+    "k": 18,
+    "n": 130,
+    "ci95": [
+      8.9,
+      20.8
+    ]
+  },
+  "verifier_triggered": {
+    "pct": 0.0,
+    "k": 0,
+    "n": 130,
+    "ci95": [
+      0.0,
+      2.9
+    ]
+  },
+  "verifier_false_alarm": {
+    "pct": 0.0,
+    "k": 0,
+    "n": 70,
+    "ci95": [
+      0.0,
+      5.2
+    ]
+  },
+  "verifier_success_given_triggered": {
+    "pct": 0.0,
+    "k": 0,
+    "n": 0,
+    "ci95": [
+      0.0,
+      0.0
     ]
   },
   "latency_first_call_ms": {

@@ -20,17 +20,18 @@
   "prompt_version": "v1.2",
   "judge_model": null,
   "rule_repair": true,
+  "verifier_mode": "observable",
   "negative_rag": false,
   "dataset": "dev_test_130.json",
   "n_total": 130,
-  "n_api_error": 0,
+  "n_api_error": 1,
   "parse_fail": {
-    "pct": 0.8,
-    "k": 1,
-    "n": 130,
+    "pct": 0.0,
+    "k": 0,
+    "n": 129,
     "ci95": [
-      0.1,
-      4.2
+      0.0,
+      2.9
     ]
   },
   "hallucination_any_pre": {
@@ -132,7 +133,7 @@
       6.1
     ]
   },
-  "cneg_real_cons": {
+  "cneg_cons_real_pre": {
     "pct": 80.0,
     "k": 16,
     "n": 20,
@@ -141,13 +142,40 @@
       91.9
     ]
   },
-  "cneg_placeholder_cons": {
+  "cneg_cons_real": {
+    "pct": 90.0,
+    "k": 18,
+    "n": 20,
+    "ci95": [
+      69.9,
+      97.2
+    ]
+  },
+  "cneg_cons_placeholder": {
     "pct": 5.0,
     "k": 1,
     "n": 20,
     "ci95": [
       0.9,
       23.6
+    ]
+  },
+  "cneg_cons_empty": {
+    "pct": 5.0,
+    "k": 1,
+    "n": 20,
+    "ci95": [
+      0.9,
+      23.6
+    ]
+  },
+  "std_cons_empty": {
+    "pct": 0.0,
+    "k": 0,
+    "n": 69,
+    "ci95": [
+      0.0,
+      5.3
     ]
   },
   "std_cons_placeholder": {
@@ -159,7 +187,16 @@
       81.6
     ]
   },
-  "std_cons_hallucinated": {
+  "std_cons_hallu_real_pre": {
+    "pct": 24.6,
+    "k": 17,
+    "n": 69,
+    "ci95": [
+      16.0,
+      36.0
+    ]
+  },
+  "std_cons_hallu_real": {
     "pct": 27.5,
     "k": 19,
     "n": 69,
@@ -169,42 +206,24 @@
     ]
   },
   "pros_cons_balanced_pre": {
-    "pct": 71.1,
+    "pct": 71.9,
     "k": 64,
-    "n": 90,
+    "n": 89,
     "ci95": [
-      61.0,
-      79.5
+      61.8,
+      80.2
     ]
   },
   "pros_cons_balanced_incatalog": {
-    "pct": 72.2,
-    "k": 65,
-    "n": 90,
+    "pct": 76.4,
+    "k": 68,
+    "n": 89,
     "ci95": [
-      62.2,
-      80.4
+      66.6,
+      84.0
     ]
   },
   "cons_grounded_cneg": {
-    "pct": 0.0,
-    "k": 0,
-    "n": 0,
-    "ci95": [
-      0.0,
-      0.0
-    ]
-  },
-  "verifier_needed": {
-    "pct": 4.7,
-    "k": 6,
-    "n": 129,
-    "ci95": [
-      2.1,
-      9.8
-    ]
-  },
-  "verifier_success_given_triggered": {
     "pct": 0.0,
     "k": 0,
     "n": 0,
@@ -222,13 +241,85 @@
       19.2
     ]
   },
+  "rule_recover_asin_rate": {
+    "pct": 6.2,
+    "k": 8,
+    "n": 129,
+    "ci95": [
+      3.2,
+      11.8
+    ]
+  },
+  "rule_ooc_flag_rate": {
+    "pct": 4.7,
+    "k": 6,
+    "n": 129,
+    "ci95": [
+      2.1,
+      9.8
+    ]
+  },
+  "rule_extract_pros_cons_rate": {
+    "pct": 4.7,
+    "k": 6,
+    "n": 129,
+    "ci95": [
+      2.1,
+      9.8
+    ]
+  },
+  "rule_fill_brand_price_rate": {
+    "pct": 7.0,
+    "k": 9,
+    "n": 129,
+    "ci95": [
+      3.7,
+      12.7
+    ]
+  },
+  "verifier_needed": {
+    "pct": 3.1,
+    "k": 4,
+    "n": 129,
+    "ci95": [
+      1.2,
+      7.7
+    ]
+  },
+  "verifier_triggered": {
+    "pct": 0.0,
+    "k": 0,
+    "n": 129,
+    "ci95": [
+      0.0,
+      2.9
+    ]
+  },
+  "verifier_false_alarm": {
+    "pct": 0.0,
+    "k": 0,
+    "n": 69,
+    "ci95": [
+      0.0,
+      5.3
+    ]
+  },
+  "verifier_success_given_triggered": {
+    "pct": 0.0,
+    "k": 0,
+    "n": 0,
+    "ci95": [
+      0.0,
+      0.0
+    ]
+  },
   "latency_first_call_ms": {
-    "mean": 6061.8,
-    "p95": 7416.7
+    "mean": 5912.6,
+    "p95": 7384.8
   },
   "latency_total_ms": {
-    "mean": 6061.8,
-    "p95": 7416.7
+    "mean": 5912.6,
+    "p95": 7384.8
   },
-  "tokens_total_mean": 2574.1
+  "tokens_total_mean": 2564.5
 }
