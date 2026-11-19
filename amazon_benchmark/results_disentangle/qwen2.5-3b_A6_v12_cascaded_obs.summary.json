@@ -65,10 +65,10 @@
   "hallu_attr_incatalog": {
     "pct": 0.0,
     "k": 0,
-    "n": 86,
+    "n": 88,
     "ci95": [
       0.0,
-      4.3
+      4.2
     ]
   },
   "unsupported_rec_incatalog": {
@@ -81,12 +81,12 @@
     ]
   },
   "rec_is_gold_incatalog": {
-    "pct": 94.4,
-    "k": 84,
+    "pct": 96.6,
+    "k": 86,
     "n": 89,
     "ci95": [
-      87.5,
-      97.6
+      90.6,
+      98.8
     ]
   },
   "ooc_correct_pre": {
@@ -126,12 +126,12 @@
     ]
   },
   "false_refusal_incatalog": {
-    "pct": 3.4,
-    "k": 3,
+    "pct": 1.1,
+    "k": 1,
     "n": 89,
     "ci95": [
-      1.2,
-      9.4
+      0.2,
+      6.1
     ]
   },
   "cneg_cons_real_pre": {
@@ -180,12 +180,12 @@
     ]
   },
   "std_cons_placeholder": {
-    "pct": 72.5,
-    "k": 50,
+    "pct": 100.0,
+    "k": 69,
     "n": 69,
     "ci95": [
-      61.0,
-      81.6
+      94.7,
+      100.0
     ]
   },
   "std_cons_hallu_real_pre": {
@@ -198,12 +198,12 @@
     ]
   },
   "std_cons_hallu_real": {
-    "pct": 27.5,
-    "k": 19,
+    "pct": 0.0,
+    "k": 0,
     "n": 69,
     "ci95": [
-      18.4,
-      39.0
+      0.0,
+      5.3
     ]
   },
   "pros_cons_balanced_pre": {
@@ -216,12 +216,12 @@
     ]
   },
   "pros_cons_balanced_incatalog": {
-    "pct": 77.5,
-    "k": 69,
+    "pct": 98.9,
+    "k": 88,
     "n": 89,
     "ci95": [
-      67.8,
-      85.0
+      93.9,
+      99.8
     ]
   },
   "cons_grounded_cneg": {
@@ -234,12 +234,12 @@
     ]
   },
   "rule_repair_rate": {
-    "pct": 12.4,
-    "k": 16,
+    "pct": 25.6,
+    "k": 33,
     "n": 129,
     "ci95": [
-      7.8,
-      19.2
+      18.8,
+      33.7
     ]
   },
   "rule_recover_asin_rate": {
@@ -278,22 +278,31 @@
       12.7
     ]
   },
-  "verifier_needed": {
-    "pct": 3.1,
-    "k": 4,
+  "rule_cons_clean_standard_rate": {
+    "pct": 14.7,
+    "k": 19,
     "n": 129,
     "ci95": [
-      1.2,
-      7.7
+      9.6,
+      21.9
+    ]
+  },
+  "verifier_needed": {
+    "pct": 1.6,
+    "k": 2,
+    "n": 129,
+    "ci95": [
+      0.4,
+      5.5
     ]
   },
   "verifier_triggered": {
-    "pct": 3.1,
-    "k": 4,
+    "pct": 1.6,
+    "k": 2,
     "n": 129,
     "ci95": [
-      1.2,
-      7.7
+      0.4,
+      5.5
     ]
   },
   "verifier_false_alarm": {
@@ -307,10 +316,10 @@
   },
   "verifier_success_given_triggered": {
     "pct": 100.0,
-    "k": 4,
-    "n": 4,
+    "k": 2,
+    "n": 2,
     "ci95": [
-      51.0,
+      34.2,
       100.0
     ]
   },
@@ -319,8 +328,8 @@
     "p95": 7384.8
   },
   "latency_total_ms": {
-    "mean": 5964.4,
-    "p95": 7563.2
+    "mean": 5976.4,
+    "p95": 7462.8
   },
   "tokens_total_mean": 2564.5
 }

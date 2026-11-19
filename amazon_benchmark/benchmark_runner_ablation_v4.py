@@ -517,7 +517,8 @@ def rule_based_repair(parsed: dict, user_query: str, kb: dict, ctx_asins: list,
         "rule_recover_asin": False,
         "rule_ooc_flag": False,
         "rule_extract_pros_cons": False,
-        "rule_fill_brand_price": False
+        "rule_fill_brand_price": False,
+        "rule_cons_clean_standard": False
     }
 
     rec = repaired.get("recommended_item_id")
@@ -639,6 +640,17 @@ def rule_based_repair(parsed: dict, user_query: str, kb: dict, ctx_asins: list,
             subrules["rule_fill_brand_price"] = True
             actions.append("rule_fill_price_from_kb")
 
+    # LUẬT 5: CHUẨN HÓA CONS KHI KHÔNG CÓ REVIEW TIÊU CỰC (L5: ctx_neg_n == 0)
+    # Khi danh mục RAG không có review xấu (Standard), ép cons về placeholder chuẩn
+    # để loại bỏ hoàn toàn các câu cảnh báo tự suy đoán không có cơ sở thực tế.
+    if not null_rec and ctx_neg_n == 0:
+        placeholder_str = "Chưa ghi nhận phản hồi tiêu cực trên hệ thống"
+        cur_cons = repaired.get("cons")
+        if not nonempty_list(cur_cons) or not is_placeholder_cons(cur_cons):
+            repaired["cons"] = [placeholder_str]
+            subrules["rule_cons_clean_standard"] = True
+            actions.append("rule_cons_clean_standard_l5")
+
     return repaired, len(actions) > 0, actions, subrules
 
 
@@ -686,8 +698,13 @@ def detect_correction_need_observable(parsed: dict, user_query: str, ctx: dict, 
 
     # Tín hiệu 2: Văn bản từ chối nhưng cờ boolean OOC chưa bật hoặc vẫn gợi ý ASIN
     ooc_keywords = ["không thuộc", "ngoài phạm vi", "không có sản phẩm", "không bán", "không tìm thấy", "chỉ tư vấn", "từ chối"]
-    if any(w in resp_text for w in ooc_keywords) and (not rejected or not null_rec):
-        return "ooc_not_rejected"
+    if any(w in resp_text for w in ooc_keywords):
+        if null_rec or (rec_s and rec_s not in ctx.get("asins", [])):
+            if not rejected or not null_rec:
+                return "ooc_not_rejected"
+        else:
+            if rejected:
+                return "incatalog_contradiction"
 
     # Tín hiệu 3: Mâu thuẫn gợi ý sản phẩm trong danh mục nhưng lại bật cờ từ chối OOC
     if rec_s and rec_s in ctx.get("asins", []) and rejected:
@@ -696,7 +713,7 @@ def detect_correction_need_observable(parsed: dict, user_query: str, ctx: dict, 
     return None
 
 
-def run_verifier(parsed: dict, reason: str, user_query: str, ctx_neg_text: str, model_name: str, cfg: dict, timeout: int):
+def run_verifier(parsed: dict, reason: str, user_query: str, ctx_neg_text: str, model_name: str, cfg: dict, timeout: int, ctx_asins: list = None):
     if reason == "ooc_not_rejected":
         critique = f"""CẢNH BÁO TỰ KIỂM TRA (SELF-CORRECTION):
 Câu hỏi của khách hàng: "{user_query}" là yêu cầu NGOÀI PHẠM VI hoặc SẢN PHẨM KHÔNG CÓ TRONG KHO.
@@ -718,9 +735,30 @@ Vì câu hỏi thuộc ngành mỹ phẩm và đã có sản phẩm trong danh m
     fixed = extract_json(r["text"]) if r["status"] == "OK" else None
     if fixed:
         merged = dict(parsed)
-        for k in MERGE_KEYS:
+        # Giới hạn trường được sửa theo đúng loại lỗi (tránh phá hủy trường đã đúng sẵn)
+        if reason == "missing_cons":
+            allowed_keys = ["cons", "response_to_user"]
+        elif reason == "incatalog_contradiction":
+            allowed_keys = ["is_out_of_catalog_rejected", "response_to_user"]
+        elif reason == "ooc_not_rejected":
+            allowed_keys = ["recommended_item_id", "is_out_of_catalog_rejected", "response_to_user"]
+        else:
+            allowed_keys = MERGE_KEYS
+
+        for k in allowed_keys:
             if k in fixed:
                 merged[k] = fixed[k]
+
+        # ĐIỀU KIỆN "KHÔNG GÂY HỒI QUY" (NO-REGRESSION CONSTRAINT):
+        # 1. Nếu ban đầu đã có ASIN nằm trong danh mục (in-catalog), Verifier không được phép làm mất ASIN
+        #    hoặc bật cờ từ chối (trừ khi chính lý do gọi Verifier là ooc_not_rejected).
+        prev_rec = parsed.get("recommended_item_id")
+        ctx_asins = ctx_asins or []
+        if prev_rec and str(prev_rec).strip() in ctx_asins and reason != "ooc_not_rejected":
+            if is_null(merged.get("recommended_item_id")) or as_bool(merged.get("is_out_of_catalog_rejected")):
+                # Hồi quy nghiêm trọng -> Bác bỏ kết quả sửa của Verifier
+                return parsed, False, r["latency_ms"], r["text"]
+
         if reason == "ooc_not_rejected":
             ok = as_bool(merged.get("is_out_of_catalog_rejected")) and is_null(merged.get("recommended_item_id"))
         elif reason == "missing_cons":
@@ -764,7 +802,7 @@ BOOL_COLS = [
     "cons_empty", "cons_placeholder", "cons_real", "pros_cons_balanced", "cons_missing",
     "cneg_cons_real", "cneg_cons_placeholder", "cneg_cons_empty",
     "std_cons_empty", "std_cons_placeholder", "std_cons_hallu_real",
-    "rule_repaired", "rule_recover_asin", "rule_ooc_flag", "rule_extract_pros_cons", "rule_fill_brand_price",
+    "rule_repaired", "rule_recover_asin", "rule_ooc_flag", "rule_extract_pros_cons", "rule_fill_brand_price", "rule_cons_clean_standard",
     "needs_correction", "verifier_triggered", "verifier_false_alarm", "verifier_success",
     "hallucination_any", "rec_nonnull",
     "neg_rag_correct", "neg_rag_hallu_gold", "neg_rag_picked_decoy", "neg_rag_hallu_random",
@@ -818,6 +856,7 @@ def summarize(df: pd.DataFrame, meta: dict) -> dict:
     S["rule_ooc_flag_rate"] = _rate(df.rule_ooc_flag, valid)
     S["rule_extract_pros_cons_rate"] = _rate(df.rule_extract_pros_cons, valid)
     S["rule_fill_brand_price_rate"] = _rate(df.rule_fill_brand_price, valid)
+    S["rule_cons_clean_standard_rate"] = _rate(df.rule_cons_clean_standard, valid)
 
     # Verifier rates
     S["verifier_needed"] = _rate(df.needs_correction, valid)
@@ -883,6 +922,7 @@ def print_summary(S: dict):
         ("  - Luật 2: Sửa cờ OOC", "rule_ooc_flag_rate"),
         ("  - Luật 3: Trích xuất pros/cons", "rule_extract_pros_cons_rate"),
         ("  - Luật 4: Điền brand/price từ KB", "rule_fill_brand_price_rate"),
+        ("  - Luật 5: Chuẩn hóa cons Standard (L5)", "rule_cons_clean_standard_rate"),
         ("Verifier cần can thiệp", "verifier_needed"),
         ("Verifier kích hoạt (triggered)", "verifier_triggered"),
         ("Verifier báo động nhầm (false alarm)", "verifier_false_alarm"),
@@ -1063,7 +1103,8 @@ def run_benchmark(model_name, comps, label, limit=None, k=5, neg_r=1, ooc_contex
             "rule_recover_asin": False,
             "rule_ooc_flag": False,
             "rule_extract_pros_cons": False,
-            "rule_fill_brand_price": False
+            "rule_fill_brand_price": False,
+            "rule_cons_clean_standard": False
         }
         verifier_false_alarm = False
 
@@ -1093,7 +1134,7 @@ def run_benchmark(model_name, comps, label, limit=None, k=5, neg_r=1, ooc_contex
                 # LLM Verifier lượt 2 chỉ gọi khi luật không xử lý được
                 trig = True
                 final, succ, v_lat, v_raw = run_verifier(
-                    final, reason, user_query, ctx.get("neg_text", ""), model_name, cfg, timeout
+                    final, reason, user_query, ctx.get("neg_text", ""), model_name, cfg, timeout, ctx_asins=ctx["asins"]
                 )
                 row["verifier_latency_ms"] = v_lat
                 if t_type != OOC and t_type != CNEG and not ev_pre["false_refusal"]:

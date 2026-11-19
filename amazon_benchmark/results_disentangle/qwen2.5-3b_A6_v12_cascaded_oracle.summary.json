@@ -180,12 +180,12 @@
     ]
   },
   "std_cons_placeholder": {
-    "pct": 72.5,
-    "k": 50,
+    "pct": 100.0,
+    "k": 69,
     "n": 69,
     "ci95": [
-      61.0,
-      81.6
+      94.7,
+      100.0
     ]
   },
   "std_cons_hallu_real_pre": {
@@ -198,12 +198,12 @@
     ]
   },
   "std_cons_hallu_real": {
-    "pct": 27.5,
-    "k": 19,
+    "pct": 0.0,
+    "k": 0,
     "n": 69,
     "ci95": [
-      18.4,
-      39.0
+      0.0,
+      5.3
     ]
   },
   "pros_cons_balanced_pre": {
@@ -216,12 +216,12 @@
     ]
   },
   "pros_cons_balanced_incatalog": {
-    "pct": 76.4,
-    "k": 68,
+    "pct": 97.8,
+    "k": 87,
     "n": 89,
     "ci95": [
-      66.6,
-      84.0
+      92.2,
+      99.4
     ]
   },
   "cons_grounded_cneg": {
@@ -234,12 +234,12 @@
     ]
   },
   "rule_repair_rate": {
-    "pct": 12.4,
-    "k": 16,
+    "pct": 25.6,
+    "k": 33,
     "n": 129,
     "ci95": [
-      7.8,
-      19.2
+      18.8,
+      33.7
     ]
   },
   "rule_recover_asin_rate": {
@@ -276,6 +276,15 @@
     "ci95": [
       3.7,
       12.7
+    ]
+  },
+  "rule_cons_clean_standard_rate": {
+    "pct": 14.7,
+    "k": 19,
+    "n": 129,
+    "ci95": [
+      9.6,
+      21.9
     ]
   },
   "verifier_needed": {
@@ -319,7 +328,7 @@
     "p95": 7384.8
   },
   "latency_total_ms": {
-    "mean": 5949.4,
+    "mean": 5948.8,
     "p95": 7418.4
   },
   "tokens_total_mean": 2564.5

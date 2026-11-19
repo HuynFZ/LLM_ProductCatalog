@@ -1,0 +1,45 @@
+{
+  "recall_at_1": {
+    "pct": 76.875,
+    "ci95": [
+      69.8,
+      82.7
+    ],
+    "k": 123,
+    "n": 160
+  },
+  "recall_at_5": {
+    "pct": 92.5,
+    "ci95": [
+      87.3,
+      95.7
+    ],
+    "k": 148,
+    "n": 160
+  },
+  "recall_at_10": {
+    "pct": 93.75,
+    "ci95": [
+      88.9,
+      96.6
+    ],
+    "k": 150,
+    "n": 160
+  },
+  "bm25_ooc_auroc": 0.93859375,
+  "bm25_at_ooc_92pct": {
+    "tau": 43.4461555480957,
+    "ooc_rejection": 92.5,
+    "false_refusal": 31.25
+  },
+  "bm25_at_fr_1pct": {
+    "tau": 22.88009262084961,
+    "ooc_rejection": 72.5,
+    "false_refusal": 0.0
+  },
+  "bm25_youden_optimal": {
+    "tau": 29.334516525268555,
+    "ooc_rejection": 80.0,
+    "false_refusal": 3.75
+  }
+}

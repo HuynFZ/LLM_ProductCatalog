@@ -1,0 +1,334 @@
+{
+  "model": "qwen2.5:3b",
+  "config": "A5_v12_raw_200",
+  "components": [
+    "profile",
+    "rag",
+    "cneg",
+    "cot",
+    "selfcheck"
+  ],
+  "model_id_used": [
+    "qwen2.5:3b"
+  ],
+  "temperature": 0.0,
+  "max_tokens": 1500,
+  "seed": 42,
+  "k": 5,
+  "neg_r": 1,
+  "ooc_context": "decoy",
+  "prompt_version": "v1.2",
+  "judge_model": null,
+  "rule_repair": false,
+  "verifier_mode": "observable",
+  "negative_rag": false,
+  "dataset": "dev_test_200.json",
+  "n_total": 200,
+  "n_api_error": 0,
+  "parse_fail": {
+    "pct": 0.5,
+    "k": 1,
+    "n": 200,
+    "ci95": [
+      0.1,
+      2.8
+    ]
+  },
+  "hallucination_any_pre": {
+    "pct": 1.5,
+    "k": 3,
+    "n": 199,
+    "ci95": [
+      0.5,
+      4.3
+    ]
+  },
+  "hallucination_any_valid": {
+    "pct": 1.5,
+    "k": 3,
+    "n": 199,
+    "ci95": [
+      0.5,
+      4.3
+    ]
+  },
+  "hallu_asin_incatalog": {
+    "pct": 0.0,
+    "k": 0,
+    "n": 159,
+    "ci95": [
+      0.0,
+      2.4
+    ]
+  },
+  "hallu_attr_incatalog": {
+    "pct": 0.8,
+    "k": 1,
+    "n": 129,
+    "ci95": [
+      0.1,
+      4.3
+    ]
+  },
+  "unsupported_rec_incatalog": {
+    "pct": 0.0,
+    "k": 0,
+    "n": 159,
+    "ci95": [
+      0.0,
+      2.4
+    ]
+  },
+  "rec_is_gold_incatalog": {
+    "pct": 79.2,
+    "k": 126,
+    "n": 159,
+    "ci95": [
+      72.3,
+      84.8
+    ]
+  },
+  "ooc_correct_pre": {
+    "pct": 70.0,
+    "k": 28,
+    "n": 40,
+    "ci95": [
+      54.6,
+      81.9
+    ]
+  },
+  "ooc_correct": {
+    "pct": 70.0,
+    "k": 28,
+    "n": 40,
+    "ci95": [
+      54.6,
+      81.9
+    ]
+  },
+  "ooc_wrong_rec": {
+    "pct": 5.0,
+    "k": 2,
+    "n": 40,
+    "ci95": [
+      1.4,
+      16.5
+    ]
+  },
+  "false_refusal_pre_incatalog": {
+    "pct": 18.9,
+    "k": 30,
+    "n": 159,
+    "ci95": [
+      13.5,
+      25.7
+    ]
+  },
+  "false_refusal_incatalog": {
+    "pct": 18.9,
+    "k": 30,
+    "n": 159,
+    "ci95": [
+      13.5,
+      25.7
+    ]
+  },
+  "cneg_cons_real_pre": {
+    "pct": 88.3,
+    "k": 53,
+    "n": 60,
+    "ci95": [
+      77.8,
+      94.2
+    ]
+  },
+  "cneg_cons_real": {
+    "pct": 88.3,
+    "k": 53,
+    "n": 60,
+    "ci95": [
+      77.8,
+      94.2
+    ]
+  },
+  "cneg_cons_placeholder": {
+    "pct": 3.3,
+    "k": 2,
+    "n": 60,
+    "ci95": [
+      0.9,
+      11.4
+    ]
+  },
+  "cneg_cons_empty": {
+    "pct": 8.3,
+    "k": 5,
+    "n": 60,
+    "ci95": [
+      3.6,
+      18.1
+    ]
+  },
+  "std_cons_empty": {
+    "pct": 2.0,
+    "k": 2,
+    "n": 99,
+    "ci95": [
+      0.6,
+      7.1
+    ]
+  },
+  "std_cons_placeholder": {
+    "pct": 71.7,
+    "k": 71,
+    "n": 99,
+    "ci95": [
+      62.2,
+      79.6
+    ]
+  },
+  "std_cons_hallu_real_pre": {
+    "pct": 26.3,
+    "k": 26,
+    "n": 99,
+    "ci95": [
+      18.6,
+      35.7
+    ]
+  },
+  "std_cons_hallu_real": {
+    "pct": 26.3,
+    "k": 26,
+    "n": 99,
+    "ci95": [
+      18.6,
+      35.7
+    ]
+  },
+  "pros_cons_balanced_pre": {
+    "pct": 74.4,
+    "k": 119,
+    "n": 160,
+    "ci95": [
+      67.1,
+      80.5
+    ]
+  },
+  "pros_cons_balanced_incatalog": {
+    "pct": 74.4,
+    "k": 119,
+    "n": 160,
+    "ci95": [
+      67.1,
+      80.5
+    ]
+  },
+  "cons_grounded_cneg": {
+    "pct": 0.0,
+    "k": 0,
+    "n": 0,
+    "ci95": [
+      0.0,
+      0.0
+    ]
+  },
+  "rule_repair_rate": {
+    "pct": 0.0,
+    "k": 0,
+    "n": 199,
+    "ci95": [
+      0.0,
+      1.9
+    ]
+  },
+  "rule_recover_asin_rate": {
+    "pct": 0.0,
+    "k": 0,
+    "n": 199,
+    "ci95": [
+      0.0,
+      1.9
+    ]
+  },
+  "rule_ooc_flag_rate": {
+    "pct": 0.0,
+    "k": 0,
+    "n": 199,
+    "ci95": [
+      0.0,
+      1.9
+    ]
+  },
+  "rule_extract_pros_cons_rate": {
+    "pct": 0.0,
+    "k": 0,
+    "n": 199,
+    "ci95": [
+      0.0,
+      1.9
+    ]
+  },
+  "rule_fill_brand_price_rate": {
+    "pct": 0.0,
+    "k": 0,
+    "n": 199,
+    "ci95": [
+      0.0,
+      1.9
+    ]
+  },
+  "rule_cons_clean_standard_rate": {
+    "pct": 0.0,
+    "k": 0,
+    "n": 199,
+    "ci95": [
+      0.0,
+      1.9
+    ]
+  },
+  "verifier_needed": {
+    "pct": 5.5,
+    "k": 11,
+    "n": 199,
+    "ci95": [
+      3.1,
+      9.6
+    ]
+  },
+  "verifier_triggered": {
+    "pct": 0.0,
+    "k": 0,
+    "n": 200,
+    "ci95": [
+      0.0,
+      1.9
+    ]
+  },
+  "verifier_false_alarm": {
+    "pct": 0.0,
+    "k": 0,
+    "n": 100,
+    "ci95": [
+      0.0,
+      3.7
+    ]
+  },
+  "verifier_success_given_triggered": {
+    "pct": 0.0,
+    "k": 0,
+    "n": 0,
+    "ci95": [
+      0.0,
+      0.0
+    ]
+  },
+  "latency_first_call_ms": {
+    "mean": 6503.9,
+    "p95": 8282.3
+  },
+  "latency_total_ms": {
+    "mean": 6503.9,
+    "p95": 8282.3
+  },
+  "tokens_total_mean": 2614.4
+}

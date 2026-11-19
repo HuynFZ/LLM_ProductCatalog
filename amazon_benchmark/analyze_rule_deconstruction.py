@@ -7,6 +7,8 @@ và phân rã trạng thái Cons (Tri-state Cons) trên tập Dev 130.
 import json
 import glob
 import os
+import sys
+import argparse
 import pandas as pd
 import numpy as np
 
@@ -18,16 +20,23 @@ def fmt_pct_ci(r):
 
 
 def main():
-    res_dir = "amazon_benchmark/results_disentangle"
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--res_dir", default="amazon_benchmark/results_disentangle")
+    parser.add_argument("--suffix", default="")
+    args = parser.parse_args()
+
+    res_dir = args.res_dir
+    suf = f"_{args.suffix}" if args.suffix else ""
+
     configs = [
-        ("v1.1 Thô (Raw)", "qwen2.5-3b_A5_v11_raw.summary.json", "qwen2.5-3b_A5_v11_raw.csv"),
-        ("v1.1 + Sửa luật (Rule)", "qwen2.5-3b_A5_v11_repair.summary.json", "qwen2.5-3b_A5_v11_repair.csv"),
-        ("v1.2 Thô (Raw)", "qwen2.5-3b_A5_v12_raw.summary.json", "qwen2.5-3b_A5_v12_raw.csv"),
-        ("v1.2 + Sửa luật (Rule)", "qwen2.5-3b_A5_v12_repair.summary.json", "qwen2.5-3b_A5_v12_repair.csv"),
-        ("v1.2 + Verifier Thực tế (Obs)", "qwen2.5-3b_A6_v12_verifier_obs.summary.json", "qwen2.5-3b_A6_v12_verifier_obs.csv"),
-        ("v1.2 + Verifier Lý thuyết (Oracle)", "qwen2.5-3b_A6_v12_verifier_oracle.summary.json", "qwen2.5-3b_A6_v12_verifier_oracle.csv"),
-        ("v1.2 + Phối hợp Thực tế (Cascaded Obs)", "qwen2.5-3b_A6_v12_cascaded_obs.summary.json", "qwen2.5-3b_A6_v12_cascaded_obs.csv"),
-        ("v1.2 + Phối hợp Lý thuyết (Cascaded Oracle)", "qwen2.5-3b_A6_v12_cascaded_oracle.summary.json", "qwen2.5-3b_A6_v12_cascaded_oracle.csv"),
+        ("v1.1 Thô (Raw)", f"qwen2.5-3b_A5_v11_raw{suf}.summary.json", f"qwen2.5-3b_A5_v11_raw{suf}.csv"),
+        ("v1.1 + Sửa luật (Rule)", f"qwen2.5-3b_A5_v11_repair{suf}.summary.json", f"qwen2.5-3b_A5_v11_repair{suf}.csv"),
+        ("v1.2 Thô (Raw)", f"qwen2.5-3b_A5_v12_raw{suf}.summary.json", f"qwen2.5-3b_A5_v12_raw{suf}.csv"),
+        ("v1.2 + Sửa luật (Rule)", f"qwen2.5-3b_A5_v12_repair{suf}.summary.json", f"qwen2.5-3b_A5_v12_repair{suf}.csv"),
+        ("v1.2 + Verifier Thực tế (Obs)", f"qwen2.5-3b_A6_v12_verifier_obs{suf}.summary.json", f"qwen2.5-3b_A6_v12_verifier_obs{suf}.csv"),
+        ("v1.2 + Verifier Lý thuyết (Oracle)", f"qwen2.5-3b_A6_v12_verifier_oracle{suf}.summary.json", f"qwen2.5-3b_A6_v12_verifier_oracle{suf}.csv"),
+        ("v1.2 + Phối hợp Thực tế (Cascaded Obs)", f"qwen2.5-3b_A6_v12_cascaded_obs{suf}.summary.json", f"qwen2.5-3b_A6_v12_cascaded_obs{suf}.csv"),
+        ("v1.2 + Phối hợp Lý thuyết (Cascaded Oracle)", f"qwen2.5-3b_A6_v12_cascaded_oracle{suf}.summary.json", f"qwen2.5-3b_A6_v12_cascaded_oracle{suf}.csv"),
     ]
 
     summaries = {}
@@ -60,9 +69,9 @@ def main():
         print(f"| {name:<35} | {fr:<15} | {ooc:<15} | {gold:<15} | {cn_real:<15} | {pc:<15} | {p95:<8} |")
 
     print("\n" + "=" * 110)
-    print("BẢNG 2: PHÂN RÃ 4 LUẬT CON SỬA LỖI (RULE DECONSTRUCTION)")
+    print("BẢNG 2: PHÂN RÃ CÁC LUẬT CON SỬA LỖI (RULE DECONSTRUCTION)")
     print("=" * 110)
-    h2 = ["Cấu hình", "Tổng sửa luật", "L1: Cứu ASIN", "L2: Sửa cờ OOC", "L3: Trích xuất P/C", "L4: Điền Brand/Price"]
+    h2 = ["Cấu hình", "Tổng sửa luật", "L1: Cứu ASIN", "L2: Sửa cờ OOC", "L3: Trích xuất P/C", "L4: Điền Brand/Price", "L5: Chuẩn hóa Std"]
     print(f"| {' | '.join(h2)} |")
     print(f"| {' | '.join(['---'] * len(h2))} |")
     for name, _, _ in configs:
@@ -74,7 +83,8 @@ def main():
         l2 = fmt_pct_ci(S.get("rule_ooc_flag_rate"))
         l3 = fmt_pct_ci(S.get("rule_extract_pros_cons_rate"))
         l4 = fmt_pct_ci(S.get("rule_fill_brand_price_rate"))
-        print(f"| {name:<35} | {tot:<15} | {l1:<15} | {l2:<15} | {l3:<15} | {l4:<18} |")
+        l5 = fmt_pct_ci(S.get("rule_cons_clean_standard_rate"))
+        print(f"| {name:<35} | {tot:<15} | {l1:<15} | {l2:<15} | {l3:<15} | {l4:<18} | {l5:<16} |")
 
     print("\n" + "=" * 110)
     print("BẢNG 3: PHÂN TÍCH CONS 3 TRẠNG THÁI (TRI-STATE CONS DISTRIBUTION & SIDE EFFECTS)")
