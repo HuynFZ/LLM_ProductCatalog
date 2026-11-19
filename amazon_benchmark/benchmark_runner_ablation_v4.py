@@ -15,6 +15,11 @@ KẾ THỪA VÀ NÂNG CẤP TỪ v3:
 """
 import os
 import sys
+sys.path.insert(0, os.path.abspath("."))
+try:
+    sys.stdout.reconfigure(line_buffering=True)
+except Exception:
+    pass
 import re
 import json
 import math
@@ -288,8 +293,8 @@ def _fmt_product(i: int, asin: str, p: dict) -> str:
             f"- Danh mục: {cat}\n- Giá: {price_s}\n- Mô tả: {desc}")
 
 
-def build_context(sample: dict, kb: dict, k: int, neg_r: int, neg_index: dict,
-                  decoy_keys: list, ooc_context: str, seed: int, negative_rag: bool = False) -> dict:
+def build_context_oracle(sample: dict, kb: dict, k: int, neg_r: int, neg_index: dict,
+                         decoy_keys: list, ooc_context: str, seed: int, negative_rag: bool = False) -> dict:
     t, sid = sample.get("test_type"), sample.get("sample_id")
     gold = sample.get("ground_truth_target") or None
     gold_id = gold.get("item_id") if gold else None
@@ -336,7 +341,58 @@ def build_context(sample: dict, kb: dict, k: int, neg_r: int, neg_index: dict,
             neg_n += len(revs)
     neg_text = "\n\n".join(neg_chunks) if neg_chunks else "(Không có đánh giá tiêu cực nào cho các sản phẩm trên.)"
     return {"asins": items, "catalog_text": catalog_text, "neg_text": neg_text,
-            "neg_n": neg_n, "gold_id": gold_id}
+            "neg_n": neg_n, "gold_id": gold_id, "gold_retrieved": True if not negative_rag and t != OOC else False,
+            "has_reviews": bool(neg_n > 0)}
+
+
+def build_context_bm25(sample: dict, kb: dict, bm25, k: int, neg_r: int, neg_index: dict) -> dict:
+    """
+    Ngữ cảnh thực tế không nhãn:
+    - Top-k sản phẩm được truy xuất trực tiếp từ 259,204 SKU bằng BM25 dựa trên câu hỏi người dùng.
+    - Review 1-2 sao nạp vào context là review thật của chính các sản phẩm được truy xuất (từ neg_index).
+    - TUYỆT ĐỐI KHÔNG đọc ground_truth_target, negative_constraints, hay test_type.
+    - Cờ gold_retrieved được tính offline để đo lường RAG âm tự nhiên, không đưa vào prompt.
+    """
+    user_query = sample.get("user_query", "")
+    top_hits = bm25.query(user_query, top_k=k)
+    items = [asin for asin, score in top_hits]
+
+    catalog_text = "\n\n".join(_fmt_product(i + 1, a, kb.get(a, {}))
+                               for i, a in enumerate(items)) if items else ZERO_MSG
+
+    neg_chunks, neg_n = [], 0
+    for a in items:
+        revs = neg_index.get(a, [])[:neg_r] if neg_index else []
+        if revs:
+            info = kb.get(a, {})
+            title_clean = html.unescape(str(info.get('title', '')))
+            neg_chunks.append(f"[{a} — {title_clean}]\n" +
+                              "\n".join(f'Review {j + 1}: "{r}"' for j, r in enumerate(revs)))
+            neg_n += len(revs)
+    neg_text = "\n\n".join(neg_chunks) if neg_chunks else "(Không có đánh giá tiêu cực nào cho các sản phẩm trên.)"
+
+    # Offline evaluation check only (NEVER given to model):
+    gold = sample.get("ground_truth_target") or None
+    gold_id = gold.get("item_id") if gold else None
+    gold_retrieved = bool(gold_id and gold_id in items)
+
+    return {
+        "asins": items,
+        "catalog_text": catalog_text,
+        "neg_text": neg_text,
+        "neg_n": neg_n,
+        "gold_id": gold_id,
+        "gold_retrieved": gold_retrieved,
+        "has_reviews": bool(neg_n > 0)
+    }
+
+
+def build_context(sample: dict, kb: dict, k: int, neg_r: int, neg_index: dict,
+                  decoy_keys: list, ooc_context: str, seed: int, negative_rag: bool = False,
+                  context_mode: str = "oracle", bm25 = None) -> dict:
+    if context_mode == "bm25":
+        return build_context_bm25(sample, kb, bm25, k, neg_r, neg_index)
+    return build_context_oracle(sample, kb, k, neg_r, neg_index, decoy_keys, ooc_context, seed, negative_rag=negative_rag)
 
 
 def build_prompts(sample: dict, comps: list, ctx: dict, prompt_version: str = "v1.2") -> tuple:
@@ -869,6 +925,13 @@ def summarize(df: pd.DataFrame, meta: dict) -> dict:
         S["neg_rag_hallu_gold"] = _rate(df.neg_rag_hallu_gold, valid & in_cat)
         S["neg_rag_picked_decoy"] = _rate(df.neg_rag_picked_decoy, valid & in_cat)
         S["neg_rag_hallu_random"] = _rate(df.neg_rag_hallu_random, valid & in_cat)
+    if "gold_retrieved" in df.columns:
+        S["gold_retrieval_rate"] = _rate(df.gold_retrieved.fillna(False).astype(bool), valid & in_cat)
+        missed = valid & in_cat & (~df.gold_retrieved.fillna(False).astype(bool))
+        if missed.sum() > 0:
+            S["natural_miss_count"] = int(missed.sum())
+            S["natural_miss_null_rec"] = _rate(~df.rec_nonnull, missed)
+            S["natural_miss_picked_substitute"] = _rate(df.rec_nonnull, missed)
     lat = df.loc[ok]
     for name, col in (("latency_first_call_ms", "latency_ms"), ("latency_total_ms", "total_latency_ms")):
         S[name] = {"mean": round(float(lat[col].mean()), 1) if len(lat) else None,
@@ -937,6 +1000,12 @@ def print_summary(S: dict):
         print(f"  {'Ảo giác ASIN gold (không có trong context)':<52} {_fmt(S.get('neg_rag_hallu_gold'))}")
         print(f"  {'Gợi ý nhầm sản phẩm nhiễu (decoy)':<52} {_fmt(S.get('neg_rag_picked_decoy'))}")
         print(f"  {'Ảo giác ASIN ngẫu nhiên':<52} {_fmt(S.get('neg_rag_hallu_random'))}")
+    if S.get("gold_retrieval_rate"):
+        print("  --- HIỆU SUẤT TRUY XUẤT THỰC TẾ & THẤT BẠI RAG TỰ NHIÊN (BM25 REAL CONTEXT) ---")
+        print(f"  {'Tỷ lệ truy xuất trúng Gold (Recall@k thực tế)':<52} {_fmt(S.get('gold_retrieval_rate'))}")
+        if S.get("natural_miss_count", 0) > 0:
+            print(f"  {'Khi truy xuất trượt Gold (N=' + str(S.get('natural_miss_count')) + '): Từ chối êm (null rec)':<52} {_fmt(S.get('natural_miss_null_rec'))}")
+            print(f"  {'Khi truy xuất trượt Gold (N=' + str(S.get('natural_miss_count')) + '): Chọn sản phẩm thay thế':<52} {_fmt(S.get('natural_miss_picked_substitute'))}")
 
 
 def resolve_components(config, components_arg=None, no_verifier=False):
@@ -958,11 +1027,11 @@ def resolve_components(config, components_arg=None, no_verifier=False):
 
 
 def load_neg_index(r: int) -> dict:
-    if r <= 1:
+    if r <= 0:
         return {}
     path = os.path.join(DATA_DIR, "reviews_Beauty_5.json.gz")
     if not os.path.exists(path):
-        print(f"⚠️ Không thấy {path}, bỏ qua neg_r > 1")
+        print(f"⚠️ Không thấy {path}, bỏ qua neg_r")
         return {}
     print(f"📦 Đang nạp tối đa {r} review 1-2 sao/sản phẩm từ {path}...")
     import gzip
@@ -998,9 +1067,12 @@ def run_benchmark(model_name, comps, label, limit=None, k=5, neg_r=1, ooc_contex
                   temperature=0.0, max_tokens=None, api_model_id=None, judge_model=None,
                   retry_errors=False, out_dir=None, kb=None, testset_file=None, timeout=60,
                   use_rule_repair=True, verifier_mode="observable", negative_rag=False,
-                  prompt_version="v1.2", label_suffix="", reuse_raw_jsonl=None, overwrite=False):
+                  prompt_version="v1.2", label_suffix="", reuse_raw_jsonl=None, overwrite=False,
+                  context_mode="oracle"):
     out_dir = out_dir or DEFAULT_OUT_DIR
     os.makedirs(out_dir, exist_ok=True)
+    if context_mode == "bm25" and "bm25" not in label:
+        label = f"{label}_bm25"
     if label_suffix:
         label = f"{label}_{label_suffix}"
     if negative_rag:
@@ -1030,7 +1102,7 @@ def run_benchmark(model_name, comps, label, limit=None, k=5, neg_r=1, ooc_contex
     print("=" * 90)
     print(f"🚀 [Runner v4] {model_name} | {label} | {comps} | k={k} neg_r={neg_r} seed={seed} "
           f"prompt={prompt_version} rule_repair={use_rule_repair} verifier_mode={verifier_mode} "
-          f"negative_rag={negative_rag}")
+          f"negative_rag={negative_rag} context_mode={context_mode}")
     print(f"📁 Dataset: {testset_file or 'benchmark_test_500.json'}")
     if reuse_raw_jsonl:
         print(f"📦 Raw cache: {reuse_raw_jsonl}")
@@ -1043,7 +1115,29 @@ def run_benchmark(model_name, comps, label, limit=None, k=5, neg_r=1, ooc_contex
         samples = samples[:limit]
     kb = kb if kb is not None else load_real_kb()
     decoy_keys = sorted(kb.keys())
-    neg_index = load_neg_index(neg_r) if neg_r > 1 else {}
+    neg_index = load_neg_index(neg_r) if neg_r > 0 else {}
+
+    bm25 = None
+    if context_mode == "bm25":
+        from amazon_benchmark.benchmark_real_rag_and_ooc import FastBM25
+        bm25_cache_path = os.path.join(DATA_DIR, "fast_bm25_cache.pkl")
+        if os.path.exists(bm25_cache_path):
+            print(f"⚡ Đang nạp BM25 Index từ Cache ({bm25_cache_path})...")
+            try:
+                with open(bm25_cache_path, "rb") as f:
+                    bm25 = pickle.load(f)
+                print(f"✅ Đã nạp BM25 Index ({bm25.N:,} sản phẩm).")
+            except Exception:
+                bm25 = None
+        if bm25 is None:
+            bm25 = FastBM25()
+            bm25.fit(kb)
+            try:
+                with open(bm25_cache_path, "wb") as f:
+                    pickle.dump(bm25, f)
+                print(f"💾 Đã lưu BM25 Index vào {bm25_cache_path}")
+            except Exception as e:
+                print(f"⚠️ Không thể lưu cache BM25: {e}")
 
     cfg = {"temperature": temperature, "max_tokens": max_tokens, "seed": seed, "api_model_id": api_model_id}
     jcfg = {"temperature": 0.0, "max_tokens": 150, "seed": seed}
@@ -1070,7 +1164,8 @@ def run_benchmark(model_name, comps, label, limit=None, k=5, neg_r=1, ooc_contex
             continue
         t_type = sample.get("test_type")
         user_query = sample.get("user_query", "")
-        ctx = build_context(sample, kb, k, neg_r, neg_index, decoy_keys, ooc_context, seed, negative_rag=negative_rag)
+        ctx = build_context(sample, kb, k, neg_r, neg_index, decoy_keys, ooc_context, seed,
+                            negative_rag=negative_rag, context_mode=context_mode, bm25=bm25)
         sys_p, usr_p = build_prompts(sample, comps, ctx, prompt_version=prompt_version)
 
         if sid in cached_raw:
@@ -1095,7 +1190,9 @@ def run_benchmark(model_name, comps, label, limit=None, k=5, neg_r=1, ooc_contex
                "parse_fail": parse_fail, "json_valid": json_valid, "latency_ms": r["latency_ms"],
                "verifier_latency_ms": 0.0, "context_n": len(ctx["asins"]), "neg_review_n": ctx["neg_n"],
                "total_tokens": r["usage"]["total_tokens"], "rule_repaired": False,
-               "rule_repair_actions": ""}
+               "rule_repair_actions": "",
+               "gold_retrieved": ctx.get("gold_retrieved", False),
+               "has_reviews": ctx.get("has_reviews", False)}
 
         reason, final, v_raw, trig, succ = None, {}, None, False, False
         ev_pre = ev = None
@@ -1180,7 +1277,8 @@ def run_benchmark(model_name, comps, label, limit=None, k=5, neg_r=1, ooc_contex
                "timestamp": datetime.now(tz=TZ).isoformat(),
                "prompt": {"system": sys_p, "user": usr_p},
                "context": {"catalog_asins": ctx["asins"], "gold_asin": ctx["gold_id"],
-                           "neg_review_n": ctx["neg_n"]},
+                           "neg_review_n": ctx["neg_n"], "gold_retrieved": ctx.get("gold_retrieved", False),
+                           "has_reviews": ctx.get("has_reviews", False)},
                "raw_output": r["text"], "parsed_json": parsed, "latency_ms": r["latency_ms"],
                "token_usage": r["usage"], "status": spec_status(api_error, r["status"], parse_fail, r["text"]),
                "error": r["status"] if api_error else None,
@@ -1257,6 +1355,8 @@ def parse_args(argv=None):
     p.add_argument("--reuse_raw_jsonl", default=None, help="đường dẫn file .jsonl chứa kết quả thô LLM lần gọi 1 để tái sử dụng")
     p.add_argument("--overwrite", action="store_true", help="ghi đè kết quả nếu file đã tồn tại")
     p.add_argument("--negative_rag", action="store_true", help="chạy chế độ Retrieval Failure (không đưa sản phẩm đúng vào context)")
+    p.add_argument("--context_mode", choices=["oracle", "bm25"], default="oracle",
+                   help="chế độ dựng ngữ cảnh: oracle (tiêm sản phẩm đúng) hoặc bm25 (truy xuất thực tế trên 259k SKU)")
     p.add_argument("--table", action="store_true")
     p.add_argument("--models", nargs="+", default=None)
     return p.parse_args(argv)
@@ -1275,4 +1375,4 @@ if __name__ == "__main__":
                   use_rule_repair=not a.no_rule_repair, verifier_mode=a.verifier_mode,
                   negative_rag=a.negative_rag, prompt_version=a.prompt_version,
                   label_suffix=a.label_suffix, reuse_raw_jsonl=a.reuse_raw_jsonl,
-                  overwrite=a.overwrite)
+                  overwrite=a.overwrite, context_mode=a.context_mode)

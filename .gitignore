@@ -45,6 +45,7 @@ demo/backend/articles.csv
 *.bak.csv
 amazon_benchmark/data/*.gz
 amazon_benchmark/data/*.pkl
+amazon_benchmark/data/bge_m3_cache.json
 esci_benchmark/data/*.parquet
 esci_benchmark/ecinstruct_data/
 
