@@ -28,6 +28,7 @@ import json
 import math
 import time
 import hashlib
+import html
 import inspect
 import argparse
 import random
@@ -295,7 +296,8 @@ PROMPT_VERSION = _prompt_version()
 # 3. CHẤM ĐIỂM
 # ==============================================================================
 def _norm(s) -> str:
-    return re.sub(r"[^a-z0-9]+", " ", str(s).lower()).strip()
+    """Giải mã HTML entity (&#39; &amp;) của metadata Amazon trước khi chuẩn hóa."""
+    return re.sub(r"[^a-z0-9]+", " ", html.unescape(str(s)).lower()).strip()
 
 
 def _to_float(v):

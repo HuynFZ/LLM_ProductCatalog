@@ -32,12 +32,12 @@
     ]
   },
   "hallucination_any_valid": {
-    "pct": 6.2,
-    "k": 31,
+    "pct": 0.0,
+    "k": 0,
     "n": 500,
     "ci95": [
-      4.4,
-      8.7
+      0.0,
+      0.8
     ]
   },
   "hallu_asin_incatalog": {
@@ -50,12 +50,12 @@
     ]
   },
   "hallu_attr_incatalog": {
-    "pct": 7.4,
-    "k": 31,
+    "pct": 0.0,
+    "k": 0,
     "n": 417,
     "ci95": [
-      5.3,
-      10.4
+      0.0,
+      0.9
     ]
   },
   "unsupported_rec_incatalog": {

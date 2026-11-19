@@ -41,6 +41,8 @@ demo/backend/articles.csv
 *.pkl
 *.pickle
 *.gz
+*.bak
+*.bak.csv
 amazon_benchmark/data/*.gz
 amazon_benchmark/data/*.pkl
 esci_benchmark/data/*.parquet
