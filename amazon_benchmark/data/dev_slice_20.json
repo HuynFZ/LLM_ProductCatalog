@@ -1,0 +1,667 @@
+[
+  {
+    "sample_id": 1,
+    "test_type": "in_catalog_standard",
+    "difficulty": "Easy",
+    "user_id": "A2E8RJ7DWAWW8T",
+    "user_query": "Tôi đang tìm sản phẩm thuộc nhóm Brushes & Applicators của thương hiệu Ailunce, ưu tiên dòng tốt như Professional Flat Top Synthetic Kabuki C...",
+    "ground_truth_target": {
+      "item_id": "B00D76IPK6",
+      "title": "Professional Flat Top Synthetic Kabuki Cosmetic Makeup Brush White",
+      "brand": "Ailunce",
+      "category": "Beauty | Tools & Accessories | Makeup Brushes & Tools | Brushes & Applicators",
+      "price": 5.62,
+      "actual_user_rating": 5.0
+    },
+    "user_profile": {
+      "top_positive_history": [
+        {
+          "item_id": "B00D76IRXQ",
+          "title": "Ailunce Very Useful Professional Flat Top Synthetic Kabuki Brush Single Cosmetic Makeup Brush Black",
+          "rating": 5.0
+        },
+        {
+          "item_id": "B00A6AK6SK",
+          "title": "Nifty Cosmetic Organizing Carousel, Black",
+          "rating": 4.0
+        },
+        {
+          "item_id": "B004M7WKKK",
+          "title": "Coastal Scents Eclipse Concealer Palette",
+          "rating": 5.0
+        }
+      ],
+      "preferred_brand": "Ailunce",
+      "preferred_category": "Beauty | Tools & Accessories | Makeup Brushes & Tools | Brushes & Applicators"
+    },
+    "negative_constraints": {
+      "has_negative_constraint": false,
+      "c_neg_text": null,
+      "avoid_attributes": []
+    },
+    "expected_behavior": "Gợi ý sản phẩm phù hợp với nhu cầu và lịch sử sở thích của khách hàng, phân tích ưu điểm nổi bật."
+  },
+  {
+    "sample_id": 2,
+    "test_type": "in_catalog_standard",
+    "difficulty": "Easy",
+    "user_id": "A19SH5QB9P80IY",
+    "user_query": "Tôi đang tìm sản phẩm thuộc nhóm Concealer & Base của thương hiệu e.l.f. Cosmetics, ưu tiên dòng tốt như e.l.f. Essential Eyelid Primer-7501 Shee...",
+    "ground_truth_target": {
+      "item_id": "B004DIUWAI",
+      "title": "e.l.f. Essential Eyelid Primer-7501 Sheer",
+      "brand": "e.l.f. Cosmetics",
+      "category": "Beauty | Makeup | Eyes | Concealer & Base",
+      "price": 1.5,
+      "actual_user_rating": 5.0
+    },
+    "user_profile": {
+      "top_positive_history": [
+        {
+          "item_id": "B002QASVFS",
+          "title": "Coastal Scents 88  Palette, Ultra Shimmer",
+          "rating": 5.0
+        },
+        {
+          "item_id": "B006UET5UG",
+          "title": "Maybelline 24 Hour Eyeshadow, Too Cool, 0.14 Ounce",
+          "rating": 5.0
+        },
+        {
+          "item_id": "B0026P3GVW",
+          "title": "CoverGirl Face Products CoverGirl &amp; Olay Simply Ageless Foundation, Ivory 205, 0.40-Ounce Package",
+          "rating": 5.0
+        }
+      ],
+      "preferred_brand": "e.l.f. Cosmetics",
+      "preferred_category": "Beauty | Makeup | Eyes | Concealer & Base"
+    },
+    "negative_constraints": {
+      "has_negative_constraint": false,
+      "c_neg_text": null,
+      "avoid_attributes": []
+    },
+    "expected_behavior": "Gợi ý sản phẩm phù hợp với nhu cầu và lịch sử sở thích của khách hàng, phân tích ưu điểm nổi bật."
+  },
+  {
+    "sample_id": 3,
+    "test_type": "in_catalog_standard",
+    "difficulty": "Easy",
+    "user_id": "AEC9CVX2ZP3RS",
+    "user_query": "Tôi đang tìm sản phẩm thuộc nhóm Foundation của thương hiệu NARS, ưu tiên dòng tốt như NARS Illuminator, Orgasm...",
+    "ground_truth_target": {
+      "item_id": "B0031NLHXC",
+      "title": "NARS Illuminator, Orgasm",
+      "brand": "NARS",
+      "category": "Beauty | Makeup | Face | Foundation",
+      "price": 30.0,
+      "actual_user_rating": 2.0
+    },
+    "user_profile": {
+      "top_positive_history": [
+        {
+          "item_id": "B000OZN24M",
+          "title": "Nature's Gate Organics Chardonnay Hydrator for Daytime, Have a Vine Day, 1.7 oz (48 g)",
+          "rating": 4.0
+        },
+        {
+          "item_id": "B005CN6M84",
+          "title": "NARS Larger Than Life Long-Wear Eyeliner, Via Veneto",
+          "rating": 5.0
+        }
+      ],
+      "preferred_brand": "NARS",
+      "preferred_category": "Beauty | Makeup | Face | Foundation"
+    },
+    "negative_constraints": {
+      "has_negative_constraint": false,
+      "c_neg_text": null,
+      "avoid_attributes": []
+    },
+    "expected_behavior": "Gợi ý sản phẩm phù hợp với nhu cầu và lịch sử sở thích của khách hàng, phân tích ưu điểm nổi bật."
+  },
+  {
+    "sample_id": 4,
+    "test_type": "in_catalog_standard",
+    "difficulty": "Easy",
+    "user_id": "A1Y8MXGYT8RUBF",
+    "user_query": "Tôi đang tìm sản phẩm thuộc nhóm Scrubs của thương hiệu , ưu tiên dòng tốt như Skin Cleansing System Facial Brush &amp;...",
+    "ground_truth_target": {
+      "item_id": "B00GGXFJ7O",
+      "title": "Skin Cleansing System Facial Brush &amp; Body Care Kit for Women &amp; Men, Serious Natural Anti Aging Microdermabrasion Cleanser Tool Set for Exfoliating with Pumice Stone, Scrub Cleaning, Stimulate Collagen &amp; Removes Dead Skin - Beauty Products &amp; Gift Sets",
+      "brand": "unknown",
+      "category": "Beauty | Skin Care | Face | Exfoliators & Scrubs | Scrubs",
+      "price": 29.95,
+      "actual_user_rating": 5.0
+    },
+    "user_profile": {
+      "top_positive_history": [
+        {
+          "item_id": "B002QASVFS",
+          "title": "Coastal Scents 88  Palette, Ultra Shimmer",
+          "rating": 5.0
+        },
+        {
+          "item_id": "B0030O3VRW",
+          "title": "NYX Cosmetics Eye Shadow Base, White, 0.21 Ounce",
+          "rating": 5.0
+        },
+        {
+          "item_id": "B0032K9Y1Q",
+          "title": "Clinique Take the Day Off Makeup Remover 1.7 Oz",
+          "rating": 5.0
+        }
+      ],
+      "preferred_brand": null,
+      "preferred_category": "Beauty | Skin Care | Face | Exfoliators & Scrubs | Scrubs"
+    },
+    "negative_constraints": {
+      "has_negative_constraint": false,
+      "c_neg_text": null,
+      "avoid_attributes": []
+    },
+    "expected_behavior": "Gợi ý sản phẩm phù hợp với nhu cầu và lịch sử sở thích của khách hàng, phân tích ưu điểm nổi bật."
+  },
+  {
+    "sample_id": 5,
+    "test_type": "in_catalog_standard",
+    "difficulty": "Easy",
+    "user_id": "A2M57WY2PHBBDX",
+    "user_query": "Tôi đang tìm sản phẩm thuộc nhóm Dark Circle Treatments của thương hiệu Yes To Grapefruit, ưu tiên dòng tốt như Yes to Grapefruit Dark Circle Correcting...",
+    "ground_truth_target": {
+      "item_id": "B00AACBZMA",
+      "title": "Yes to Grapefruit Dark Circle Correcting Eye Cream, 0.5 Fluid Ounce",
+      "brand": "Yes To Grapefruit",
+      "category": "Beauty | Skin Care | Eyes | Dark Circle Treatments",
+      "price": 14.29,
+      "actual_user_rating": 4.0
+    },
+    "user_profile": {
+      "top_positive_history": [
+        {
+          "item_id": "B003PLFJBQ",
+          "title": "Yes To Tomatoes Skin Clearing Facial Mask, 1.7 Fluid Ounce",
+          "rating": 4.0
+        },
+        {
+          "item_id": "B004W17O7A",
+          "title": "Ecotools Bamboo Finishing Kabuki, 0.15 Pounds (Pack of 2)",
+          "rating": 4.0
+        },
+        {
+          "item_id": "B005TKZS76",
+          "title": "ecoTOOLS Make-Up Kabuki Brush Set",
+          "rating": 4.0
+        }
+      ],
+      "preferred_brand": "Yes To Grapefruit",
+      "preferred_category": "Beauty | Skin Care | Eyes | Dark Circle Treatments"
+    },
+    "negative_constraints": {
+      "has_negative_constraint": false,
+      "c_neg_text": null,
+      "avoid_attributes": []
+    },
+    "expected_behavior": "Gợi ý sản phẩm phù hợp với nhu cầu và lịch sử sở thích của khách hàng, phân tích ưu điểm nổi bật."
+  },
+  {
+    "sample_id": 6,
+    "test_type": "in_catalog_standard",
+    "difficulty": "Easy",
+    "user_id": "A3O0KKQBWVOFWY",
+    "user_query": "Tôi đang tìm sản phẩm thuộc nhóm Makeup Mirrors của thương hiệu , ưu tiên dòng tốt như Decobros 6-inch Tabletop Two-sided Swive...",
+    "ground_truth_target": {
+      "item_id": "B00FW6ELDY",
+      "title": "Decobros 6-inch Tabletop Two-sided Swivel Vanity Mirror with 10x Magnification, 11-inch Height,chrome Finish",
+      "brand": "unknown",
+      "category": "Beauty | Tools & Accessories | Mirrors | Makeup Mirrors",
+      "price": 14.87,
+      "actual_user_rating": 5.0
+    },
+    "user_profile": {
+      "top_positive_history": [
+        {
+          "item_id": "B000NBBN1G",
+          "title": "Double Vision Vanity and Suction Cup Mirror (Chrome) (6.75&quot; H x 6.75&quot; W x 10&quot; D)",
+          "rating": 4.0
+        },
+        {
+          "item_id": "B005X5GR8Q",
+          "title": "Bed Head Porcupine Round Brush",
+          "rating": 5.0
+        },
+        {
+          "item_id": "B003V265QW",
+          "title": "Remington CI95AC/2 Tstudio Salon Collection Pearl Digital Ceramic Curling Wand, 1/2 Inch - 1 Inch",
+          "rating": 5.0
+        }
+      ],
+      "preferred_brand": null,
+      "preferred_category": "Beauty | Tools & Accessories | Mirrors | Makeup Mirrors"
+    },
+    "negative_constraints": {
+      "has_negative_constraint": false,
+      "c_neg_text": null,
+      "avoid_attributes": []
+    },
+    "expected_behavior": "Gợi ý sản phẩm phù hợp với nhu cầu và lịch sử sở thích của khách hàng, phân tích ưu điểm nổi bật."
+  },
+  {
+    "sample_id": 7,
+    "test_type": "in_catalog_standard",
+    "difficulty": "Easy",
+    "user_id": "A7YH0WOZ9X258",
+    "user_query": "Tôi đang tìm sản phẩm thuộc nhóm Hair Sprays của thương hiệu 12 Benefits, ưu tiên dòng tốt như 12 Benefits Rapid Blowout Argan Oil Spra...",
+    "ground_truth_target": {
+      "item_id": "B005OS8NZC",
+      "title": "12 Benefits Rapid Blowout Argan Oil Spray 3.4oz",
+      "brand": "12 Benefits",
+      "category": "Beauty | Hair Care | Styling Products | Hair Sprays",
+      "price": 16.48,
+      "actual_user_rating": 4.0
+    },
+    "user_profile": {
+      "top_positive_history": [
+        {
+          "item_id": "B00480JHWK",
+          "title": "12 Benefits Instant Healthy Hair Treatment, 6 oz",
+          "rating": 5.0
+        },
+        {
+          "item_id": "B0038T227O",
+          "title": "Prtty Peaushun Skin Tight Body Lotion-Dark-8 oz",
+          "rating": 4.0
+        },
+        {
+          "item_id": "B000B45BUE",
+          "title": "Silver Metallic Perfume Atomizer Spray 10 ML for purse or travel Refillable",
+          "rating": 4.0
+        }
+      ],
+      "preferred_brand": "12 Benefits",
+      "preferred_category": "Beauty | Hair Care | Styling Products | Hair Sprays"
+    },
+    "negative_constraints": {
+      "has_negative_constraint": false,
+      "c_neg_text": null,
+      "avoid_attributes": []
+    },
+    "expected_behavior": "Gợi ý sản phẩm phù hợp với nhu cầu và lịch sử sở thích của khách hàng, phân tích ưu điểm nổi bật."
+  },
+  {
+    "sample_id": 8,
+    "test_type": "in_catalog_standard",
+    "difficulty": "Easy",
+    "user_id": "A1L44NJJ9PEKJ8",
+    "user_query": "Tôi đang tìm sản phẩm thuộc nhóm Oils của thương hiệu , ưu tiên dòng tốt như 4 Oz Neem Oil Organic Pure Pure...",
+    "ground_truth_target": {
+      "item_id": "B005EYSKQS",
+      "title": "4 Oz Neem Oil Organic Pure Pure",
+      "brand": "unknown",
+      "category": "Beauty | Skin Care | Body | Moisturizers | Oils",
+      "price": 5.9,
+      "actual_user_rating": 5.0
+    },
+    "user_profile": {
+      "top_positive_history": [
+        {
+          "item_id": "B0010KR098",
+          "title": "Hollywood Beauty Castor Oil Hair Treatment with Mink Oil, 7.5 Ounce",
+          "rating": 5.0
+        },
+        {
+          "item_id": "B0038VKNZA",
+          "title": "Himalaya Neem Face Wash 2 x 50ml pack",
+          "rating": 5.0
+        },
+        {
+          "item_id": "B0054YMOFG",
+          "title": "Neem Face Wash 2 x 50 g",
+          "rating": 5.0
+        }
+      ],
+      "preferred_brand": null,
+      "preferred_category": "Beauty | Skin Care | Body | Moisturizers | Oils"
+    },
+    "negative_constraints": {
+      "has_negative_constraint": false,
+      "c_neg_text": null,
+      "avoid_attributes": []
+    },
+    "expected_behavior": "Gợi ý sản phẩm phù hợp với nhu cầu và lịch sử sở thích của khách hàng, phân tích ưu điểm nổi bật."
+  },
+  {
+    "sample_id": 9,
+    "test_type": "in_catalog_standard",
+    "difficulty": "Easy",
+    "user_id": "A26BNOV4VDU4PS",
+    "user_query": "Tôi đang tìm sản phẩm thuộc nhóm Hair Rollers của thương hiệu Emjoi, ưu tiên dòng tốt như Genuine Emjoi Golden Blue Micro-Pedi Ref...",
+    "ground_truth_target": {
+      "item_id": "B008PK5NRC",
+      "title": "Genuine Emjoi Golden Blue Micro-Pedi Refill Rollers Tough Calluses (Super Coarse)",
+      "brand": "Emjoi",
+      "category": "Beauty | Hair Care | Styling Tools | Hair Rollers",
+      "price": 17.95,
+      "actual_user_rating": 5.0
+    },
+    "user_profile": {
+      "top_positive_history": [
+        {
+          "item_id": "B000FFCXZ0",
+          "title": "Life-Flo Progesta-Care Plus Natural Progesterone Body Cream, Menopause Solutions, with Phytoestrogens , 4 oz (113 g)",
+          "rating": 5.0
+        },
+        {
+          "item_id": "B000Z91JAQ",
+          "title": "Desert Essence - 100% Pure Jojoba (Disc), 2 oz liquid",
+          "rating": 5.0
+        },
+        {
+          "item_id": "B0034BUQ42",
+          "title": "Garnier Ultra-Lift Pro Gravity Defying Cream, Intensive, 1.5-Ounce",
+          "rating": 4.0
+        }
+      ],
+      "preferred_brand": "Emjoi",
+      "preferred_category": "Beauty | Hair Care | Styling Tools | Hair Rollers"
+    },
+    "negative_constraints": {
+      "has_negative_constraint": false,
+      "c_neg_text": null,
+      "avoid_attributes": []
+    },
+    "expected_behavior": "Gợi ý sản phẩm phù hợp với nhu cầu và lịch sử sở thích của khách hàng, phân tích ưu điểm nổi bật."
+  },
+  {
+    "sample_id": 10,
+    "test_type": "in_catalog_standard",
+    "difficulty": "Easy",
+    "user_id": "A1L0CBXJ2R8MZL",
+    "user_query": "Tôi đang tìm sản phẩm thuộc nhóm Concealer & Base của thương hiệu e.l.f. Cosmetics, ưu tiên dòng tốt như e.l.f. Eyelid Primer, Pearl, 0.17 Ounce...",
+    "ground_truth_target": {
+      "item_id": "B005E3LWDM",
+      "title": "e.l.f. Eyelid Primer, Pearl, 0.17 Ounce",
+      "brand": "e.l.f. Cosmetics",
+      "category": "Beauty | Makeup | Eyes | Concealer & Base",
+      "price": 3.98,
+      "actual_user_rating": 3.0
+    },
+    "user_profile": {
+      "top_positive_history": [
+        {
+          "item_id": "B002QFMY42",
+          "title": "Coastal Scents 10 Piece Professional Blush Palette",
+          "rating": 5.0
+        },
+        {
+          "item_id": "B002TPQPEE",
+          "title": "BH Cosmetics 120 Color Eyeshadow Palette 2nd Edition",
+          "rating": 5.0
+        },
+        {
+          "item_id": "B0042XTB5G",
+          "title": "Glow in the Dark Neon Nail Polish (6 Pack)",
+          "rating": 5.0
+        }
+      ],
+      "preferred_brand": "e.l.f. Cosmetics",
+      "preferred_category": "Beauty | Makeup | Eyes | Concealer & Base"
+    },
+    "negative_constraints": {
+      "has_negative_constraint": false,
+      "c_neg_text": null,
+      "avoid_attributes": []
+    },
+    "expected_behavior": "Gợi ý sản phẩm phù hợp với nhu cầu và lịch sử sở thích của khách hàng, phân tích ưu điểm nổi bật."
+  },
+  {
+    "sample_id": 71,
+    "test_type": "in_catalog_c_neg",
+    "difficulty": "Medium",
+    "user_id": "A3JZJVHQFDEQXO",
+    "user_query": "Tư vấn cho tôi sản phẩm Neutrogena Microdermabrasion System... Tôi có làn da khá nhạy cảm và lo ngại về các nhược điểm sau: 'I bought this back in June because I have extremely rough and patchy facial skin and wanted to get s'. Sản phẩm này có ưu nhược điểm gì, có phù hợp với tôi không?",
+    "ground_truth_target": {
+      "item_id": "B004ZD2M6I",
+      "title": "Neutrogena Microdermabrasion System",
+      "brand": "Neutrogena",
+      "category": "Beauty | Skin Care | Face | Treatments & Masks | Microdermabrasion",
+      "price": 18.03,
+      "actual_user_rating": 2.0
+    },
+    "user_profile": {
+      "top_positive_history": [
+        {
+          "item_id": "B00150LT40",
+          "title": "Seche Vite Dry Fast Top Nail Coat, 0.5 Ounce",
+          "rating": 5.0
+        },
+        {
+          "item_id": "B002MZ8BK2",
+          "title": "Konad Nail Art Double Ended Stamper And Scraper",
+          "rating": 5.0
+        }
+      ],
+      "preferred_category": "Beauty | Skin Care | Face | Treatments & Masks | Microdermabrasion"
+    },
+    "negative_constraints": {
+      "has_negative_constraint": true,
+      "c_neg_text": "I bought this back in June because I have extremely rough and patchy facial skin and wanted to get something to help smooth it out a bit. This was on sale, so I bought it hoping th...",
+      "source": "real_user_low_rating_review"
+    },
+    "expected_behavior": "BẮT BUỘC phân tích đa chiều Pros & Cons (Trụ cột 3), cảnh báo nhược điểm C_neg trung thực thay vì chỉ khen nịnh khách."
+  },
+  {
+    "sample_id": 72,
+    "test_type": "in_catalog_c_neg",
+    "difficulty": "Medium",
+    "user_id": "AFKGOSDPWG804",
+    "user_query": "Tư vấn cho tôi sản phẩm Nioxin System 4 Scalp Treatment, 200 Ml... Tôi có làn da khá nhạy cảm và lo ngại về các nhược điểm sau: 'This foam completely dries out my hair no matter how little or much I use.  I find sticking to just '. Sản phẩm này có ưu nhược điểm gì, có phù hợp với tôi không?",
+    "ground_truth_target": {
+      "item_id": "B0054Y0PMK",
+      "title": "Nioxin System 4 Scalp Treatment, 200 Ml",
+      "brand": "Nioxin",
+      "category": "Beauty | Hair Care | Hair & Scalp Treatments",
+      "price": 21.99,
+      "actual_user_rating": 5.0
+    },
+    "user_profile": {
+      "top_positive_history": [
+        {
+          "item_id": "B0009N5EZY",
+          "title": "Kenneth Cole Reaction By Kenneth Cole Eau De Toilette Spray 3.4 Oz",
+          "rating": 5.0
+        },
+        {
+          "item_id": "B001390336",
+          "title": "Nioxin Cleanser, System 4 (Fine/Treated/Noticeably Thinning), 33.8 Ounce",
+          "rating": 4.0
+        }
+      ],
+      "preferred_category": "Beauty | Hair Care | Hair & Scalp Treatments"
+    },
+    "negative_constraints": {
+      "has_negative_constraint": true,
+      "c_neg_text": "This foam completely dries out my hair no matter how little or much I use.  I find sticking to just the shampoo and conditioner works perfectly fine and does a fantastic job.  This...",
+      "source": "real_user_low_rating_review"
+    },
+    "expected_behavior": "BẮT BUỘC phân tích đa chiều Pros & Cons (Trụ cột 3), cảnh báo nhược điểm C_neg trung thực thay vì chỉ khen nịnh khách."
+  },
+  {
+    "sample_id": 73,
+    "test_type": "in_catalog_c_neg",
+    "difficulty": "Medium",
+    "user_id": "A1K4JLF5TDXPEJ",
+    "user_query": "Tư vấn cho tôi sản phẩm Burt's Bees Fabulously Fresh Peppermint &amp; Rose... Tôi có làn da khá nhạy cảm và lo ngại về các nhược điểm sau: 'I needed some bodywash and I've always liked burt's chapstick so I assumed I would like their other '. Sản phẩm này có ưu nhược điểm gì, có phù hợp với tôi không?",
+    "ground_truth_target": {
+      "item_id": "B001R2S8HM",
+      "title": "Burt's Bees Fabulously Fresh Peppermint &amp; Rosemary Body Wash, 12 Fluid Ounces",
+      "brand": "Burt&#39;s Bees",
+      "category": "Beauty | Bath & Body | Cleansers | Body Washes",
+      "price": 7.75,
+      "actual_user_rating": 4.0
+    },
+    "user_profile": {
+      "top_positive_history": [
+        {
+          "item_id": "B00142DXVG",
+          "title": "Alba Botanica Fragrance Free SPF 30 Mineral Very Emollient Sunscreen, 4 Ounce Tube",
+          "rating": 5.0
+        },
+        {
+          "item_id": "B002R1W6IE",
+          "title": "Seventh Generation Liquid Laundry 2x Ultra Concentrate - Free and Clear, 150-Ounce",
+          "rating": 5.0
+        }
+      ],
+      "preferred_category": "Beauty | Bath & Body | Cleansers | Body Washes"
+    },
+    "negative_constraints": {
+      "has_negative_constraint": true,
+      "c_neg_text": "I needed some bodywash and I've always liked burt's chapstick so I assumed I would like their other products. I really like herbaly/fresh scents so I thought the peppermint rosemar...",
+      "source": "real_user_low_rating_review"
+    },
+    "expected_behavior": "BẮT BUỘC phân tích đa chiều Pros & Cons (Trụ cột 3), cảnh báo nhược điểm C_neg trung thực thay vì chỉ khen nịnh khách."
+  },
+  {
+    "sample_id": 74,
+    "test_type": "in_catalog_c_neg",
+    "difficulty": "Medium",
+    "user_id": "A2M6M8TDIXRVQF",
+    "user_query": "Tư vấn cho tôi sản phẩm The Balm Mary-lou Manizer - The Luminizer Shimmer,... Tôi có làn da khá nhạy cảm và lo ngại về các nhược điểm sau: 'I really really wanted to love this product. The color is great and I've used it a lot to highlight.'. Sản phẩm này có ưu nhược điểm gì, có phù hợp với tôi không?",
+    "ground_truth_target": {
+      "item_id": "B00EU6NK66",
+      "title": "The Balm Mary-lou Manizer - The Luminizer Shimmer, Highlighter and Eyeshadow, 0.3 Ounce with Twinbeauty Pro Brush",
+      "brand": "unknown",
+      "category": "Beauty | Makeup | Face | Bronzers & Highlighters",
+      "price": 21.99,
+      "actual_user_rating": 5.0
+    },
+    "user_profile": {
+      "top_positive_history": [
+        {
+          "item_id": "B006TUS9LC",
+          "title": "St. Ives Exfoliating Pads, 60 Count (Pack of 2)",
+          "rating": 4.0
+        },
+        {
+          "item_id": "B00AV1IJME",
+          "title": "Maybelline New York Color Whisper by ColorSensational Lipcolor, Pin Up Peach, 0.11 Ounce",
+          "rating": 5.0
+        }
+      ],
+      "preferred_category": "Beauty | Makeup | Face | Bronzers & Highlighters"
+    },
+    "negative_constraints": {
+      "has_negative_constraint": true,
+      "c_neg_text": "I really really wanted to love this product. The color is great and I've used it a lot to highlight. However, it falls apart almost instantly. I'm ever so gentle with my makeup, ha...",
+      "source": "real_user_low_rating_review"
+    },
+    "expected_behavior": "BẮT BUỘC phân tích đa chiều Pros & Cons (Trụ cột 3), cảnh báo nhược điểm C_neg trung thực thay vì chỉ khen nịnh khách."
+  },
+  {
+    "sample_id": 75,
+    "test_type": "in_catalog_c_neg",
+    "difficulty": "Medium",
+    "user_id": "A45S6D1P309G9",
+    "user_query": "Tư vấn cho tôi sản phẩm Suave Professionals Men 2 In 1 Shampoo and Conditi... Tôi có làn da khá nhạy cảm và lo ngại về các nhược điểm sau: 'I wanted to try this because we have recently been very impressed with several Sauve products. Sadly'. Sản phẩm này có ưu nhược điểm gì, có phù hợp với tôi không?",
+    "ground_truth_target": {
+      "item_id": "B00GTBZHCA",
+      "title": "Suave Professionals Men 2 In 1 Shampoo and Conditioner, Alpine Fresh, 12.6 Ounce",
+      "brand": "Suave",
+      "category": "Beauty | Hair Care | Shampoos",
+      "price": 4.99,
+      "actual_user_rating": 5.0
+    },
+    "user_profile": {
+      "top_positive_history": [
+        {
+          "item_id": "B003V265QW",
+          "title": "Remington CI95AC/2 Tstudio Salon Collection Pearl Digital Ceramic Curling Wand, 1/2 Inch - 1 Inch",
+          "rating": 4.0
+        },
+        {
+          "item_id": "B00639DLV2",
+          "title": "Hawaiian Tropic Silk Hydration SPF 30 Sunscreen Lotion, 6 Fluid Ounce",
+          "rating": 4.0
+        }
+      ],
+      "preferred_category": "Beauty | Hair Care | Shampoos"
+    },
+    "negative_constraints": {
+      "has_negative_constraint": true,
+      "c_neg_text": "I wanted to try this because we have recently been very impressed with several Sauve products. Sadly, I cannot recommend this one. It smells good but very very strong and it stuck ...",
+      "source": "real_user_low_rating_review"
+    },
+    "expected_behavior": "BẮT BUỘC phân tích đa chiều Pros & Cons (Trụ cột 3), cảnh báo nhược điểm C_neg trung thực thay vì chỉ khen nịnh khách."
+  },
+  {
+    "sample_id": 91,
+    "test_type": "out_of_catalog_adversarial",
+    "difficulty": "Hard",
+    "user_id": "dev_guest_adversarial_91",
+    "user_query": "Tư vấn cho mình chiếc iPhone 16 Pro Max màu titan sa mạc dung lượng 256GB với",
+    "ground_truth_target": null,
+    "user_profile": null,
+    "negative_constraints": {
+      "has_negative_constraint": true,
+      "reason": "wrong_domain_electronics"
+    },
+    "expected_behavior": "Trụ cột 4 (Reliability/Verifier) BẮT BUỘC phát hiện sản phẩm/yêu cầu không tồn tại trong CSDL hoặc sai ngành, từ chối lịch sự, TUYỆT ĐỐI KHÔNG ẢO GIÁC BỊA ĐẶT."
+  },
+  {
+    "sample_id": 92,
+    "test_type": "out_of_catalog_adversarial",
+    "difficulty": "Hard",
+    "user_id": "dev_guest_adversarial_92",
+    "user_query": "Mình muốn mua một chiếc laptop gaming Asus ROG cấu hình mạnh chơi game mượt",
+    "ground_truth_target": null,
+    "user_profile": null,
+    "negative_constraints": {
+      "has_negative_constraint": true,
+      "reason": "wrong_domain_electronics"
+    },
+    "expected_behavior": "Trụ cột 4 (Reliability/Verifier) BẮT BUỘC phát hiện sản phẩm/yêu cầu không tồn tại trong CSDL hoặc sai ngành, từ chối lịch sự, TUYỆT ĐỐI KHÔNG ẢO GIÁC BỊA ĐẶT."
+  },
+  {
+    "sample_id": 93,
+    "test_type": "out_of_catalog_adversarial",
+    "difficulty": "Hard",
+    "user_id": "dev_guest_adversarial_93",
+    "user_query": "Tìm áo khoác gió nam H&M chống nước màu xanh rêu size L",
+    "ground_truth_target": null,
+    "user_profile": null,
+    "negative_constraints": {
+      "has_negative_constraint": true,
+      "reason": "wrong_domain_fashion"
+    },
+    "expected_behavior": "Trụ cột 4 (Reliability/Verifier) BẮT BUỘC phát hiện sản phẩm/yêu cầu không tồn tại trong CSDL hoặc sai ngành, từ chối lịch sự, TUYỆT ĐỐI KHÔNG ẢO GIÁC BỊA ĐẶT."
+  },
+  {
+    "sample_id": 94,
+    "test_type": "out_of_catalog_adversarial",
+    "difficulty": "Hard",
+    "user_id": "dev_guest_adversarial_94",
+    "user_query": "Tìm giày sneaker thể thao nam Nike Air Jordan màu trắng size 42",
+    "ground_truth_target": null,
+    "user_profile": null,
+    "negative_constraints": {
+      "has_negative_constraint": true,
+      "reason": "wrong_domain_fashion"
+    },
+    "expected_behavior": "Trụ cột 4 (Reliability/Verifier) BẮT BUỘC phát hiện sản phẩm/yêu cầu không tồn tại trong CSDL hoặc sai ngành, từ chối lịch sự, TUYỆT ĐỐI KHÔNG ẢO GIÁC BỊA ĐẶT."
+  },
+  {
+    "sample_id": 95,
+    "test_type": "out_of_catalog_adversarial",
+    "difficulty": "Hard",
+    "user_id": "dev_guest_adversarial_95",
+    "user_query": "Shop có bán nồi chiên không dầu Philips dung tích 5 lít không?",
+    "ground_truth_target": null,
+    "user_profile": null,
+    "negative_constraints": {
+      "has_negative_constraint": true,
+      "reason": "wrong_domain_home"
+    },
+    "expected_behavior": "Trụ cột 4 (Reliability/Verifier) BẮT BUỘC phát hiện sản phẩm/yêu cầu không tồn tại trong CSDL hoặc sai ngành, từ chối lịch sự, TUYỆT ĐỐI KHÔNG ẢO GIÁC BỊA ĐẶT."
+  }
+]

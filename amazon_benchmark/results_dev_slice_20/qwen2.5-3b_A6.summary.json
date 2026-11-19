@@ -1,0 +1,180 @@
+{
+  "model": "qwen2.5:3b",
+  "config": "A6",
+  "components": [
+    "profile",
+    "rag",
+    "cneg",
+    "cot",
+    "selfcheck",
+    "verifier"
+  ],
+  "model_id_used": [
+    "qwen2.5:3b"
+  ],
+  "temperature": 0.0,
+  "max_tokens": 1500,
+  "seed": 42,
+  "k": 5,
+  "neg_r": 1,
+  "ooc_context": "decoy",
+  "prompt_version": "v1.2",
+  "judge_model": null,
+  "rule_repair": true,
+  "dataset": "dev_slice_20.json",
+  "n_total": 20,
+  "n_api_error": 0,
+  "parse_fail": {
+    "pct": 0.0,
+    "k": 0,
+    "n": 20,
+    "ci95": [
+      0.0,
+      16.1
+    ]
+  },
+  "hallucination_any_valid": {
+    "pct": 0.0,
+    "k": 0,
+    "n": 20,
+    "ci95": [
+      0.0,
+      16.1
+    ]
+  },
+  "hallu_asin_incatalog": {
+    "pct": 0.0,
+    "k": 0,
+    "n": 15,
+    "ci95": [
+      0.0,
+      20.4
+    ]
+  },
+  "hallu_attr_incatalog": {
+    "pct": 0.0,
+    "k": 0,
+    "n": 14,
+    "ci95": [
+      0.0,
+      21.5
+    ]
+  },
+  "unsupported_rec_incatalog": {
+    "pct": 0.0,
+    "k": 0,
+    "n": 15,
+    "ci95": [
+      0.0,
+      20.4
+    ]
+  },
+  "rec_is_gold_incatalog": {
+    "pct": 93.3,
+    "k": 14,
+    "n": 15,
+    "ci95": [
+      70.2,
+      98.8
+    ]
+  },
+  "ooc_correct": {
+    "pct": 100.0,
+    "k": 5,
+    "n": 5,
+    "ci95": [
+      56.6,
+      100.0
+    ]
+  },
+  "ooc_wrong_rec": {
+    "pct": 0.0,
+    "k": 0,
+    "n": 5,
+    "ci95": [
+      0.0,
+      43.4
+    ]
+  },
+  "false_refusal_incatalog": {
+    "pct": 6.7,
+    "k": 1,
+    "n": 15,
+    "ci95": [
+      1.2,
+      29.8
+    ]
+  },
+  "cons_nonempty_cneg_pre": {
+    "pct": 80.0,
+    "k": 4,
+    "n": 5,
+    "ci95": [
+      37.6,
+      96.4
+    ]
+  },
+  "cons_nonempty_cneg_final": {
+    "pct": 100.0,
+    "k": 5,
+    "n": 5,
+    "ci95": [
+      56.6,
+      100.0
+    ]
+  },
+  "pros_cons_balanced_incatalog": {
+    "pct": 93.3,
+    "k": 14,
+    "n": 15,
+    "ci95": [
+      70.2,
+      98.8
+    ]
+  },
+  "cons_grounded_cneg": {
+    "pct": 0.0,
+    "k": 0,
+    "n": 0,
+    "ci95": [
+      0.0,
+      0.0
+    ]
+  },
+  "verifier_needed": {
+    "pct": 5.0,
+    "k": 1,
+    "n": 20,
+    "ci95": [
+      0.9,
+      23.6
+    ]
+  },
+  "verifier_success_given_triggered": {
+    "pct": 100.0,
+    "k": 1,
+    "n": 1,
+    "ci95": [
+      20.7,
+      100.0
+    ]
+  },
+  "rule_repair_rate": {
+    "pct": 10.0,
+    "k": 2,
+    "n": 20,
+    "ci95": [
+      2.8,
+      30.1
+    ]
+  },
+  "latency_first_call_ms": {
+    "mean": 6568.8,
+    "p95": 8163.6
+  },
+  "latency_total_ms": {
+    "mean": 6652.6,
+    "p95": 8163.6
+  },
+  "tokens_total_mean": 2585.2
+}
